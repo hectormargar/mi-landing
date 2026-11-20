@@ -1,0 +1,724 @@
+<!doctype html>
+<!--
+  =====================================================================
+  LANDING PERSONAL · Héctor Martín
+  NOTAS DE TRASPASO (léelas antes de tocar nada)
+  =====================================================================
+
+  QUÉ ES
+    Una web de una sola página, 100% estática: HTML + CSS + JS puros.
+    No hay npm, ni framework, ni paso de compilación, ni backend.
+    Para verla en local basta con abrir este archivo en el navegador
+    (o servir la carpeta con cualquier servidor estático, p. ej.
+    `python3 -m http.server` y abrir http://localhost:8000).
+    Para publicarla, sube la carpeta tal cual a cualquier hosting
+    estático (GitHub Pages, Netlify, un bucket S3…).
+
+  ESTRUCTURA DE CARPETAS
+    index.html            → este archivo: TODO el contenido (textos)
+    estilos/style.css     → todo el diseño (colores, tipografía, layout)
+    js/main.js            → extras: tema oscuro, menú móvil, animaciones,
+                            botón "Volver arriba"
+    fuentes/              → tipografías Inter y Fraunces (alojadas en local,
+                            sin Google Fonts). Los .txt OFL son sus licencias:
+                            NO los borres, la licencia obliga a conservarlos.
+    imagenes/             → foto (WebP + copia JPG para redes sociales), CV en
+                            PDF, favicon.svg y el SVG de las ondas de fondo
+
+  CÓMO CAMBIAR COSAS HABITUALES
+    - Textos: se editan directamente aquí, en el HTML.
+    - Colores: variables al principio de style.css (:root). No cambies
+      colores "a mano" en otras reglas; usa siempre las variables.
+    - Actualizar el CV: sustituye imagenes/CV-Hector-Martin.pdf manteniendo
+      el MISMO nombre (está enlazado en dos sitios: hero y contacto).
+    - El email de contacto también aparece dos veces (sección Contacto).
+    - El año del copyright del footer está escrito a mano.
+
+  CONVENCIONES
+    - Clases con nomenclatura BEM: bloque__elemento--modificador
+      (ej. .case__body, .status--prod). Ayuda a saber de un vistazo qué
+      regla CSS afecta a qué parte.
+    - Los ids de las <section> se usan como anclas del menú (#casos…) y
+      el JS los usa para resaltar la sección activa. Si cambias un id,
+      cambia también el href del menú.
+    - Mejora progresiva: la página tiene que verse y funcionar sin JS.
+    - Accesibilidad: hay detalles intencionados (skip-link, aria-*, alt,
+      textos ocultos para lectores de pantalla). Si no sabes para qué
+      sirve un atributo aria, no lo borres: pregunta o busca primero.
+  =====================================================================
+-->
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- Imprescindible para que en móvil no se vea la versión de escritorio en miniatura -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO: título de la pestaña y texto que muestra Google bajo el enlace -->
+    <title>Héctor Martín · CX & AI Solutions Architect</title>
+    <meta
+      name="description"
+      content="Arquitectura de Contact Center e IA conversacional, del reto de negocio a la solución en producción."
+    />
+
+    <!-- Icono de la pestaña (SVG: se ve nítido a cualquier tamaño) -->
+    <link rel="icon" href="imagenes/favicon.svg" type="image/svg+xml" />
+
+    <!--
+      Open Graph: la tarjeta de vista previa al compartir el enlace en
+      LinkedIn, WhatsApp, Slack… Si cambias el título o la descripción de
+      arriba, cámbialos también aquí.
+      PENDIENTE: og:url y og:image tienen que ser URLs ABSOLUTAS (con
+      https:// y el dominio). Cuando la web tenga dominio, sustituye
+      "https://TU-DOMINIO" y descomenta las dos líneas. Sin og:image,
+      LinkedIn muestra la tarjeta sin foto.
+      La imagen es JPG (no WebP) porque algunas redes no leen WebP.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_ES" />
+    <meta
+      property="og:title"
+      content="Héctor Martín · CX & AI Solutions Architect"
+    />
+    <meta
+      property="og:description"
+      content="Arquitectura de Contact Center e IA conversacional, del reto de negocio a la solución en producción."
+    />
+    <!--
+    <meta property="og:url" content="https://TU-DOMINIO/" />
+    <meta property="og:image" content="https://TU-DOMINIO/imagenes/og-hector-martin.jpg" />
+    <meta property="og:image:width" content="800" />
+    <meta property="og:image:height" content="800" />
+    <meta property="og:image:alt" content="Héctor Martín, sonriendo con los brazos cruzados" />
+    -->
+
+    <!--
+      Aplica el tema elegido por el usuario antes de pintar la página (evita parpadeo).
+      Va en línea y ANTES del CSS a propósito: si esperásemos a main.js (que lleva
+      defer), el navegador pintaría primero en claro y luego saltaría a oscuro.
+      La clave "tema" de localStorage debe coincidir con la de js/main.js.
+      El try/catch evita errores si el navegador bloquea localStorage.
+    -->
+    <script>
+      try {
+        const tema = localStorage.getItem("tema");
+        if (tema) document.documentElement.dataset.theme = tema;
+      } catch (e) {}
+    </script>
+
+    <link rel="stylesheet" href="estilos/style.css" />
+    <!-- defer: descarga en paralelo y se ejecuta cuando el HTML ya está leído -->
+    <script src="js/main.js" defer></script>
+  </head>
+  <body>
+    <!--
+      Enlace de accesibilidad: invisible salvo al navegar con teclado (Tab).
+      Permite saltarse el menú e ir directo al contenido. Apunta a <main id="contenido">.
+    -->
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
+
+    <!-- ============ HEADER ============
+         Cabecera fija (position: sticky) que se queda arriba al hacer scroll.
+         En móvil los enlaces se pliegan tras el botón "Menú" (lo gestiona main.js).
+         Los botones "Menú" y ☾ están ocultos por CSS hasta que carga el JS. -->
+    <header class="site-header">
+      <a href="#inicio" class="logo">Héctor Martín</a>
+
+      <nav class="nav" aria-label="Principal">
+        <!--
+          OJO: este botón debe ir JUSTO antes de <ul id="menu">. El CSS abre el
+          menú con el selector "botón + lista" (hermano inmediato).
+          aria-expanded guarda el estado abierto/cerrado (lo cambia main.js).
+          aria-controls indica a los lectores de pantalla qué elemento controla.
+          aria-label repite el texto visible: algunas auditorías (p. ej. la de
+          Safari, "testButtonLabels") solo dan por bueno un botón si tiene este
+          atributo. Debe coincidir SIEMPRE con el texto visible (WCAG 2.5.3);
+          main.js actualiza los dos a la vez ("Menú" / "Cerrar").
+        -->
+        <button
+          class="menu-toggle"
+          type="button"
+          aria-label="Menú"
+          aria-expanded="false"
+          aria-controls="menu"
+        >
+          Menú
+        </button>
+        <!-- Cada href debe coincidir con el id de una <section> de <main> -->
+        <ul id="menu" class="nav__list">
+          <li><a href="#que-hago">Qué hago</a></li>
+          <li><a href="#casos">Casos</a></li>
+          <li><a href="#trayectoria">Trayectoria</a></li>
+        </ul>
+      </nav>
+
+      <!-- CTA del header: en móvil se oculta por CSS (allí el CTA está en el hero) -->
+      <a href="#contacto" class="btn btn--small">Escríbeme</a>
+      <!--
+        Botón de tema claro/oscuro. El icono y el aria-label iniciales son los del
+        modo claro; main.js los actualiza al cargar y en cada clic.
+      -->
+      <button
+        class="theme-toggle"
+        type="button"
+        aria-label="Cambiar a modo oscuro"
+      >
+        ☾
+      </button>
+    </header>
+
+    <!-- id="contenido" es el destino del skip-link de arriba: no lo cambies -->
+    <main id="contenido">
+      <!-- ============ 1. HERO ============
+           Primer pantallazo: quién es, qué hace y dos llamadas a la acción.
+           Solo debe haber UN <h1> en toda la página (está aquí); el resto de
+           títulos son h2/h3. Importante para SEO y lectores de pantalla.
+           En móvil la foto sube arriba; en escritorio va a la derecha (lo hace el CSS). -->
+      <section id="inicio" class="hero">
+        <div class="hero__text">
+          <p class="eyebrow">CX &amp; AI Solutions Architect · Valladolid</p>
+          <h1>Del reto de negocio a la solución en producción.</h1>
+          <p class="lead">
+            Diseño experiencias de cliente donde personas e IA trabajan juntas:
+            Contact Center e IA conversacional que escalan sin perder lo humano.
+          </p>
+          <div class="hero__actions">
+            <a href="#casos" class="btn">Ver casos</a>
+            <!-- "download" fuerza la descarga del PDF en vez de abrirlo.
+                 aria-hidden en la flecha: es decorativa, que no la lea el lector de pantalla. -->
+            <a href="imagenes/CV-Hector-Martin.pdf" class="link-arrow" download
+              >Descargar CV <span aria-hidden="true">↓</span></a
+            >
+          </div>
+        </div>
+        <!--
+          width/height reales de la imagen (800x800): el navegador reserva el hueco
+          antes de que cargue y la página no "salta". Si cambias la foto, actualízalos
+          (con la proporción correcta) y conserva un alt descriptivo.
+          Formato WebP para que pese poco.
+          fetchpriority="high": es la imagen principal de la primera pantalla,
+          así el navegador la descarga antes que otros recursos menos urgentes.
+          No le pongas loading="lazy" (retrasaría justo lo primero que se ve).
+        -->
+        <img
+          class="hero__photo"
+          src="imagenes/hector-martin.webp"
+          fetchpriority="high"
+          alt="Héctor Martín, sonriendo con los brazos cruzados"
+          width="800"
+          height="800"
+        />
+      </section>
+
+      <!-- ============ 2. FRANJA DE CREDIBILIDAD ============
+           Datos rápidos bajo el hero. No tiene id porque no está en el menú.
+           Como no tiene título visible, aria-label le da nombre para lectores de pantalla.
+           Se usa una lista de definiciones (<dl>): <dt> = dato destacado,
+           <dd> = explicación. El <div> que agrupa cada par es HTML válido y
+           permite maquetarlos como columnas. Para añadir un dato, copia un <div> entero. -->
+      <section class="credibility" aria-label="Experiencia y plataformas">
+        <dl class="credibility__list">
+          <div>
+            <dt>12+ años</dt>
+            <dd>en Contact Center</dd>
+          </div>
+          <div>
+            <dt>Plataformas</dt>
+            <dd>Genesys Cloud CX · NICE CXone · ICR Evolution</dd>
+          </div>
+          <div>
+            <dt>Certificado</dt>
+            <dd>Genesys · NICE · Cognigy</dd>
+          </div>
+          <div>
+            <dt>Todo el ciclo</dt>
+            <dd>Preventa · Proyecto · Implantación · Soporte 24x7</dd>
+          </div>
+        </dl>
+      </section>
+
+      <!-- ============ 3. QUÉ HAGO ============
+           Patrón común a todas las secciones con class="section":
+           un <h2> con su número (.section__num) delante. Los números
+           (01, 02, 03, 04) se escriben a mano: si añades o reordenas
+           secciones, renuméralos. Llevan aria-hidden para que el lector de
+           pantalla lea solo el título ("Estrategia…", no "01 Estrategia…").
+           Tarjetas: cada <article class="card"> es una capacidad. La rejilla se
+           adapta sola al número de tarjetas (no hace falta tocar el CSS). -->
+      <section id="que-hago" class="section">
+        <h2>
+          <span class="section__num" aria-hidden="true">01</span> Estrategia,
+          arquitectura e ingeniería en un mismo perfil
+        </h2>
+
+        <div class="cards">
+          <article class="card">
+            <h3>CX &amp; Contact Center Architecture</h3>
+            <p>
+              Arquitecturas omnicanal y CCaaS: enrutamiento, IVR y canales
+              digitales.
+            </p>
+          </article>
+          <article class="card">
+            <h3>IA conversacional y agéntica</h3>
+            <p>Agentes virtuales, voicebots, chatbots y Agent Copilot.</p>
+          </article>
+          <article class="card">
+            <h3>Integración e ingeniería de soluciones</h3>
+            <p>Integración con CRM y ERP, APIs REST, CTI y SIP.</p>
+          </article>
+          <article class="card">
+            <h3>Consultoría y diseño de soluciones</h3>
+            <p>
+              Requisitos, pruebas de concepto, demos, RFP/RFI y estimaciones.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <!-- ============ 4. CASOS ============
+           Cada caso es un <article class="case"> con dos columnas:
+             .case__body  → texto: número, estado, etiquetas, título, descripción, resultado
+             .case__aside → esquema del flujo + detalle técnico desplegable
+           PARA AÑADIR UN CASO: copia un <article class="case"> completo y cambia
+           los textos. Alterna "case" y "case case--reverse" para mantener el zigzag
+           (una vez texto a la izquierda, otra a la derecha).
+           Estado: usa "status status--prod" (Producción) o "status status--poc" (PoC).
+           IMPORTANTE (confidencialidad): los casos son reales pero SIN nombres de
+           clientes, y los esquemas son conceptuales. Mantén ese criterio. -->
+      <section id="casos" class="section">
+        <h2>
+          <span class="section__num" aria-hidden="true">02</span> Tres
+          proyectos, tres dimensiones del perfil
+        </h2>
+        <p class="section__intro">
+          Proyectos reales, sin nombres de clientes. Cada uno indica si está en
+          producción o fue una prueba de concepto.
+        </p>
+
+        <!-- Caso 01 -->
+        <article class="case">
+          <div class="case__body">
+            <p class="case__meta">
+              <span class="case__num">Caso 01</span>
+              <span class="status status--prod">Producción</span>
+            </p>
+            <p class="case__tags">CX Architecture · Consultoría</p>
+            <h3>Adaptación a la Ley SAC</h3>
+            <p>
+              Adaptar la plataforma a la Ley SAC (Ley 10/2025, de servicios de
+              atención a la clientela), que exige un canal de atención gratuito,
+              accesible para todas las personas y evaluable, con 12 meses de
+              plazo de adaptación.
+            </p>
+            <!-- Resultado: el <strong> es la cifra grande. Mantenla corta
+                 (un número o 2-3 palabras); el resto del texto la explica. -->
+            <p class="case__result">
+              <span class="case__label">Resultado</span>
+              <strong>100%</strong> preparados para la Ley SAC en tres
+              plataformas: Genesys, NICE e ICR.
+            </p>
+          </div>
+
+          <div class="case__aside">
+            <!--
+              Diagrama de flujo hecho solo con HTML + CSS (sin imágenes):
+              cada <li> es una caja y el CSS dibuja las flechas entre ellas.
+              Si hay espacio va en horizontal (→); si no, en vertical (↓).
+              Para cambiar el flujo, añade o quita <li>. Más de 4-5 pasos
+              no caben bien en horizontal.
+            -->
+            <figure class="flow">
+              <ol>
+                <li>Cliente</li>
+                <li>Flujos de atención optimizados</li>
+                <li>Agentes virtuales</li>
+                <li>Agente con traducción simultánea</li>
+              </ol>
+              <figcaption>
+                Esquema conceptual · no es el diagrama del cliente
+              </figcaption>
+            </figure>
+
+            <!--
+              <details>/<summary>: desplegable nativo del navegador. Funciona sin JS
+              y es accesible con teclado. El "+"/"−" lo pinta el CSS.
+            -->
+            <details>
+              <summary>Ver detalle técnico</summary>
+              <h4>Tecnologías</h4>
+              <!-- class="tags": se muestran como "chips" en línea -->
+              <ul class="tags">
+                <li>Genesys Cloud CX</li>
+                <li>NICE CXone</li>
+                <li>ICR Evolution</li>
+                <li>Agentes virtuales</li>
+                <li>Traducción simultánea</li>
+              </ul>
+              <h4>Decisiones técnicas</h4>
+              <ul>
+                <li>
+                  Traducción simultánea para que la atención sea accesible para
+                  todas las personas.
+                </li>
+                <li>Optimización de los flujos de atención existentes.</li>
+                <li>Agentes virtuales integrados en los flujos.</li>
+              </ul>
+            </details>
+          </div>
+        </article>
+
+        <!-- Caso 02 (columnas invertidas: zigzag)
+             case--reverse solo cambia el orden VISUAL con CSS. En el HTML el texto
+             sigue yendo primero, así los lectores de pantalla leen siempre igual. -->
+        <article class="case case--reverse">
+          <div class="case__body">
+            <p class="case__meta">
+              <span class="case__num">Caso 02</span>
+              <span class="status status--poc">PoC</span>
+            </p>
+            <p class="case__tags">Conversational AI · Voice AI</p>
+            <h3>Voicebot de citas</h3>
+            <p>Automatizar la reserva de citas por teléfono.</p>
+            <p class="case__result">
+              <span class="case__label">Resultado</span>
+              <!-- &gt; es el símbolo ">" escapado (en HTML ">" y "<" se escriben así en el texto) -->
+              <strong>&gt;60%</strong> de contención en la PoC: las citas se
+              resuelven con autogestión.
+            </p>
+          </div>
+
+          <div class="case__aside">
+            <figure class="flow">
+              <ol>
+                <li>Llamada entrante</li>
+                <li>Agente de voz con IA</li>
+                <li>Cita reservada</li>
+              </ol>
+              <figcaption>
+                Esquema conceptual · no es el diagrama del cliente
+              </figcaption>
+            </figure>
+
+            <details>
+              <summary>Ver detalle técnico</summary>
+              <h4>Tecnologías</h4>
+              <ul class="tags">
+                <li>Genesys Agentic Virtual Agents</li>
+                <li>IA de voz</li>
+              </ul>
+              <h4>Decisiones técnicas</h4>
+              <ul>
+                <li>
+                  Construir el mismo agente de voz en varias plataformas de IA
+                  de voz y compararlas.
+                </li>
+              </ul>
+            </details>
+          </div>
+        </article>
+
+        <!-- Caso 03 -->
+        <article class="case">
+          <div class="case__body">
+            <p class="case__meta">
+              <span class="case__num">Caso 03</span>
+              <span class="status status--prod">Producción</span>
+            </p>
+            <p class="case__tags">Solution Engineering · Integraciones</p>
+            <h3>Outbound de recobro con IA de voz</h3>
+            <p>
+              Escalar una campaña outbound de recobro y aprovechar sus datos.
+            </p>
+            <p class="case__result">
+              <span class="case__label">Resultado</span>
+              <strong>Más recobro</strong> por cada llamada que llega al agente.
+            </p>
+          </div>
+
+          <div class="case__aside">
+            <figure class="flow">
+              <ol>
+                <li>Campaña outbound</li>
+                <li>Synthflow AI</li>
+                <li>Clasificación automática</li>
+                <li>Agente</li>
+              </ol>
+              <figcaption>
+                Esquema conceptual · no es el diagrama del cliente
+              </figcaption>
+            </figure>
+
+            <details>
+              <summary>Ver detalle técnico</summary>
+              <h4>Tecnologías</h4>
+              <ul class="tags">
+                <li>ICR Evolution</li>
+                <li>Synthflow AI</li>
+                <li>SQL</li>
+                <li>Pasarelas de pago</li>
+              </ul>
+              <h4>Decisiones técnicas</h4>
+              <ul>
+                <li>
+                  Integración de Synthflow con la campaña outbound para la IA de
+                  voz.
+                </li>
+                <li>Clasificación automática de las llamadas.</li>
+                <li>Explotación de los datos de la campaña con SQL.</li>
+              </ul>
+            </details>
+          </div>
+        </article>
+      </section>
+
+      <!-- ============ 5. CÓMO TRABAJO ============
+           Tiene id pero NO está en el menú (decisión de diseño: menú corto).
+           Su fondo alterno se define en el CSS por su id (#como-trabajo). -->
+      <section id="como-trabajo" class="section">
+        <h2>
+          <span class="section__num" aria-hidden="true">03</span> Del problema a
+          producción
+        </h2>
+
+        <!-- Los números 1, 2, 3, 4 de cada paso los genera el CSS (counter),
+             no están escritos aquí. Si añades un paso, se numera solo. -->
+        <ol class="steps">
+          <li>
+            <h3>Discover</h3>
+            <p>Entender el problema.</p>
+          </li>
+          <li>
+            <h3>Architect</h3>
+            <p>Diseñar la solución.</p>
+          </li>
+          <li>
+            <h3>Validate</h3>
+            <p>Probar y validar.</p>
+          </li>
+          <li>
+            <h3>Deliver</h3>
+            <p>Preparar para producción.</p>
+          </li>
+        </ol>
+
+        <!-- Cita "manifiesto". Las comillas grandes las pinta el CSS (::before).
+             El <em> final se resalta en color de acento. -->
+        <blockquote class="quote">
+          <p>
+            Una solución está terminada cuando funciona de forma fiable, se
+            integra con lo que ya existe y aporta valor al negocio.
+            <em>No cuando funciona la demo.</em>
+          </p>
+        </blockquote>
+      </section>
+
+      <!-- ============ 6. TRAYECTORIA ============ -->
+      <section id="trayectoria" class="section">
+        <h2>
+          <span class="section__num" aria-hidden="true">04</span> Más de 12 años
+          en Contact Center
+        </h2>
+
+        <!-- Leyenda: el círculo y el rombo los dibuja el CSS -->
+        <p class="timeline__legend">
+          <span class="legend legend--role">Puesto / formación</span>
+          <span class="legend legend--cert">Certificación</span>
+        </p>
+
+        <!-- Orden: de lo más reciente a lo más antiguo, por año de inicio.
+             El orden es MANUAL: al añadir una entrada, colócala en su sitio.
+             Dos tipos de entrada:
+               - Puesto o formación: <li class="timeline__item timeline__item--role">
+                                con <h3> (cargo) y <p> (empresa · descripción).
+               - Certificación: <li class="timeline__item timeline__item--cert">
+                                con <span class="timeline__kind"> + nombre.
+             El modificador --role / --cert decide el marcador (● o ◇) y el
+             espaciado. Copia una entrada existente del mismo tipo como plantilla.
+             Fechas: cada año va en <time datetime="AAAA">; "hoy" va sin <time>. -->
+        <ol class="timeline">
+          <li class="timeline__item timeline__item--role">
+            <p class="timeline__date">
+              <time datetime="2026">2026</time> – hoy
+            </p>
+            <div class="timeline__content">
+              <h3>Consultor técnico de preventa</h3>
+              <p>Weber Solutions · Solutions Consulting y arquitectura.</p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2026">2026</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                Cognigy Partner Sales Certification
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2025">2025</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                Genesys Accredited Partner Presales Professional
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2024">2024</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                Genesys Cloud CX Professional Certification
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--role">
+            <p class="timeline__date">
+              <time datetime="2022">2022</time> –
+              <time datetime="2025">2025</time>
+            </p>
+            <div class="timeline__content">
+              <h3>Head of Customer Experience &amp; Projects</h3>
+              <p>
+                Weber Solutions · Liderazgo de equipo, proyectos Genesys, NICE e
+                ICR, SCRUM y KPIs.
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2021">2021</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                NICE inContact Core Certification
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2019">2019</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                Presence Core v11.1
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--role">
+            <p class="timeline__date">
+              <time datetime="2017">2017</time> –
+              <time datetime="2022">2022</time>
+            </p>
+            <div class="timeline__content">
+              <h3>Técnico CTI Senior</h3>
+              <p>
+                Weber Solutions · Ingeniería CTI, implantación, soporte y
+                formación.
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--cert">
+            <p class="timeline__date"><time datetime="2015">2015</time></p>
+            <div class="timeline__content">
+              <p>
+                <span class="timeline__kind">Certificación</span>
+                Cambridge Advanced English C1
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--role">
+            <p class="timeline__date">
+              <time datetime="2014">2014</time> –
+              <time datetime="2017">2017</time>
+            </p>
+            <div class="timeline__content">
+              <h3>Ingeniero de Sistemas</h3>
+              <p>
+                Minsait (Indra) · Soporte de plataformas CTI e IVR en 8x5 y
+                24x7.
+              </p>
+            </div>
+          </li>
+          <li class="timeline__item timeline__item--role">
+            <p class="timeline__date">
+              <time datetime="2008">2008</time> –
+              <time datetime="2014">2014</time>
+            </p>
+            <div class="timeline__content">
+              <h3>Ingeniero de Telecomunicaciones</h3>
+              <p>
+                Universidad de Valladolid · Proyecto fin de máster en TU/e
+                Eindhoven.
+              </p>
+            </div>
+          </li>
+        </ol>
+
+        <!-- "Ahora mismo": bloque con borde discontinuo (= en construcción).
+             Pensado para actualizarse a menudo. -->
+        <p class="now">
+          <strong>Ahora mismo:</strong> exploro cómo aplicar la IA a mi propio
+          trabajo de preventa, operaciones e ingeniería.
+        </p>
+      </section>
+
+      <!-- ============ 7. CONTACTO ============
+           Bloque final de color (fondo = color de acento). No usa class="section"
+           porque tiene su propio estilo (.contact).
+           No hay formulario ni backend: el contacto es por mailto (abre el
+           cliente de correo del visitante).
+           EL EMAIL APARECE DOS VECES (botón y enlace de texto): si cambia, cámbialo
+           en ambos. En el botón, "?subject=" rellena el asunto; los espacios van
+           codificados como %20 (es una URL). -->
+      <section id="contacto" class="contact">
+        <h2>¿Tienes un reto de CX, Contact Center o IA?</h2>
+        <p>Hablemos de arquitectura, integración y tecnología.</p>
+        <a
+          class="btn btn--inverse"
+          href="mailto:hectormargar@gmail.com?subject=Contacto%20desde%20tu%20web"
+          >Escríbeme</a
+        >
+        <p class="contact__links">
+          <a href="mailto:hectormargar@gmail.com">hectormargar@gmail.com</a>
+          <span aria-hidden="true">·</span>
+          <!--
+            Enlace externo en pestaña nueva:
+            - rel="noopener" es una medida de seguridad estándar con target="_blank";
+              no lo quites.
+            - El texto oculto (.visually-hidden) avisa a los lectores de pantalla de
+              que se abre otra pestaña; la flecha ↗ es el aviso visual.
+          -->
+          <a
+            href="https://www.linkedin.com/in/hectormartingarcia/"
+            target="_blank"
+            rel="noopener"
+            >LinkedIn <span aria-hidden="true">↗</span
+            ><span class="visually-hidden"
+              >(se abre en una pestaña nueva)</span
+            ></a
+          >
+          <span aria-hidden="true">·</span>
+          <a href="imagenes/CV-Hector-Martin.pdf" download
+            >CV <span aria-hidden="true">↓</span></a
+          >
+        </p>
+      </section>
+    </main>
+
+    <!-- ============ BOTÓN VOLVER ARRIBA ============
+         Fijo en la esquina inferior derecha (lo coloca el CSS, "Parte 7").
+         Es un enlace normal a #inicio, así que funciona sin JS. Con JS,
+         main.js lo oculta mientras el hero está a la vista.
+         La flecha es decorativa (aria-hidden); el texto que lee el lector
+         de pantalla es el .visually-hidden. -->
+    <a href="#inicio" class="to-top"
+      ><span aria-hidden="true">↑</span
+      ><span class="visually-hidden">Volver arriba</span></a
+    >
+
+    <!-- ============ FOOTER ============
+         El año está escrito a mano: actualízalo cada año. -->
+    <footer class="site-footer">
+      <p>© 2026 Héctor Martín · CX &amp; AI Solutions Architect</p>
+    </footer>
+  </body>
+</html>
