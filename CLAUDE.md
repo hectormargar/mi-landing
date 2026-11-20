@@ -44,4 +44,5 @@ claro y oscuro, y con JS desactivado.
 
 ## Forma de trabajar
 - Explica qué vas a hacer y espera mi confirmación antes de modificar ficheros.
-- No es un repo git: no hay historial para deshacer, ve con cuidado al editar.
+- Repo git privado en GitHub (hectormargar/mi-landing, rama `main`): haz commit
+  antes de cambios grandes y no hagas push sin que te lo pida.
