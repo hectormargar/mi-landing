@@ -39,10 +39,14 @@ claro y oscuro, y con JS desactivado.
 - Título y descripción: en `<title>`/meta description Y en las meta og:*.
 - Año del copyright del footer: escrito a mano.
 
-## Pendiente
-- `og:url` y `og:image` están comentados hasta tener dominio (sustituir `TU-DOMINIO`).
+## Publicación
+- Publicada con GitHub Pages (rama `main`, raíz) en
+  https://hectormargar.github.io/mi-landing/ — cada push a `main` actualiza la web.
+- `og:url` y `og:image` usan esa URL absoluta: si cambia el dominio, cámbialas.
+- El repo es PÚBLICO: nunca subas contraseñas, claves de API ni datos de clientes
+  (el historial de git es permanente). Casos siempre sin nombres de clientes.
 
 ## Forma de trabajar
 - Explica qué vas a hacer y espera mi confirmación antes de modificar ficheros.
-- Repo git privado en GitHub (hectormargar/mi-landing, rama `main`): haz commit
+- Repo git público en GitHub (hectormargar/mi-landing, rama `main`): haz commit
   antes de cambios grandes y no hagas push sin que te lo pida.
