@@ -1,0 +1,269 @@
+/* =========================================================
+   Héctor Martín · Landing — ENTRADA DE TAILWIND
+   ---------------------------------------------------------
+   NOTAS DE TRASPASO
+
+   Este archivo NO lo lee el navegador. Es la entrada de Tailwind v4:
+   el CLI lo compila, junto con las clases que encuentra en index.html y
+   js/main.js, y genera estilos/style.css (que es lo que se publica).
+
+     Compilar:      ./tailwindcss -i estilos/input.css -o estilos/style.css --minify
+     Desarrollo:    ./tailwindcss -i estilos/input.css -o estilos/style.css --watch
+
+   Nunca edites estilos/style.css a mano: se sobrescribe al compilar.
+   GitHub Pages no compila: sube style.css compilado en el mismo commit.
+
+   MIGRACIÓN EN CURSO (fases 1-6, rama feat/tailwind)
+   Mientras dure, index.html carga DOS hojas: style.css (Tailwind) y
+   legacy.css (el CSS antiguo). Tailwind mete todo en capas (@layer) y
+   el CSS sin capa siempre gana, así que legacy.css manda donde aún
+   tenga reglas. En cada fase se pasan secciones a clases de Tailwind y
+   se borran de legacy.css. En la fase 6 legacy.css desaparece.
+   Preflight (el reset de Tailwind) está DESACTIVADO hasta la fase 6:
+   la web aún depende de los márgenes por defecto del navegador.
+
+   Orden de este archivo:
+     1. Importación de Tailwind (capas)
+     2. Fuentes locales
+     3. Tema: colores, tipografías y puntos de corte
+     4. Variantes propias: dark (data-theme) y js
+     5. Estilos base (etiquetas HTML)
+     6. Componentes propios (BEM)
+   ========================================================= */
+
+/* ========== 1. TAILWIND ==========
+   Importación por partes para poder dejar fuera Preflight (ver arriba).
+   En la fase 6 se añade: @import "tailwindcss/preflight.css" layer(base);
+   source(none) + @source: Tailwind solo busca clases en estos dos
+   archivos (si no, leería también CLAUDE.md, README, legacy.css…). */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../index.html";
+@source "../js/main.js";
+
+/* ========== 2. FUENTES (locales) ==========
+   Desde /fuentes y no desde Google Fonts: sin peticiones a terceros (RGPD).
+   Fuentes "variables": un archivo cubre todos los grosores (100-900).
+   font-display: swap → se ve el texto con la fuente de respaldo mientras
+   carga. Solo caracteres latinos. */
+@font-face {
+  font-family: "Inter";
+  src: url("../fuentes/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fuentes/fraunces-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fuentes/fraunces-latin-wght-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ========== 3. TEMA ==========
+   Los colores reales viven en variables CSS (--bg, --accent…) con un
+   valor para claro (:root) y otro para oscuro (:root[data-theme="dark"]),
+   en la sección 5. @theme las convierte en clases de Tailwind:
+     --color-accent → bg-accent, text-accent, border-accent…
+   "inline" hace que la clase use var(--accent) directamente, así que al
+   cambiar de tema cambian solas (no hace falta escribir dark:… en cada
+   color).
+   --color-*: initial BORRA la paleta por defecto de Tailwind: solo
+   existen nuestros colores, y bg-red-500 o similares no funcionan. Es a
+   propósito (regla "nunca colores a mano" de CLAUDE.md).
+   Un color nuevo: variable en los DOS bloques de la sección 5 + línea aquí. */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+  --color-prod: var(--prod);
+  --color-poc: var(--poc);
+}
+
+/* Tipografías (font-serif / font-sans) y puntos de corte.
+   md = 48rem (≈768px): menú desplegado, cronología en dos columnas.
+   lg = 56rem (≈896px): hero y casos en dos columnas (el lg por defecto
+   de Tailwind es 64rem; aquí se redefine). Mobile first: sin prefijo =
+   móvil. No uses max-*: (regla de CLAUDE.md). */
+@theme {
+  --font-*: initial;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --breakpoint-lg: 56rem;
+}
+
+/* ========== 4. VARIANTES PROPIAS ==========
+   dark: → se aplica cuando <html> tiene data-theme="dark" (lo pone el
+     botón ☀/☾). NO sigue prefers-color-scheme: decisión de diseño, la
+     web arranca siempre en claro.
+   js: → se aplica cuando <html> tiene la clase "js" (la pone el script
+     inline del <head>). Para lo que solo tiene sentido con JS (botón
+     Menú, menú plegado…): sin JS, todo se queda visible. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant js (&:where(.js, .js *));
+
+/* ========== 5. BASE ==========
+   Estilos de etiquetas HTML y variables de color. Van en la capa "base",
+   la más débil: cualquier clase de Tailwind los sobrescribe. */
+@layer base {
+  /* --- Colores: modo claro ---
+     --accent: color de marca (botones, líneas, marcadores).
+     --accent-text: versión más oscura para texto y enlaces, porque
+     --accent puro no llega al contraste mínimo (4.5:1) como texto pequeño.
+     Los colores están revisados en claro y oscuro: si cambias uno,
+     comprueba el contraste (webaim.org/resources/contrastchecker). */
+  :root {
+    --bg: #faf8f4; /* blanco roto */
+    --bg-alt: #f2eee6; /* secciones alternas */
+    --surface: #ffffff; /* tarjetas y flujos */
+    --text: #1a1a1a;
+    --text-muted: #5c5853;
+    --line: #e2ddd3; /* separadores de 1px */
+    --accent: #30778d; /* azul petróleo del aro de la foto */
+    --accent-text: #245e70; /* enlaces en texto corrido */
+    --on-accent: #ffffff; /* texto sobre botón */
+    --prod: #2f6b4f; /* estado Producción */
+    --poc: #8a5a12; /* estado PoC */
+    color-scheme: light; /* controles nativos (scroll, formularios) en claro */
+  }
+
+  /* --- Colores: modo oscuro (solo si se elige con ☀/☾) --- */
+  :root[data-theme="dark"] {
+    --bg: #141615;
+    --bg-alt: #1c1f1e;
+    --surface: #202423;
+    --text: #ece8e1;
+    --text-muted: #a39e96;
+    --line: #2e3331;
+    --accent: #6fb3c8;
+    --accent-text: #6fb3c8;
+    --on-accent: #0f1a1e;
+    --prod: #7cc4a0;
+    --poc: #e0b26a;
+    color-scheme: dark;
+  }
+
+  /* border-box: el padding cuenta dentro del ancho declarado */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth; /* scroll animado al pulsar enlaces #ancla */
+    /* Hueco para el header fijo: al saltar a una sección, su título no
+       queda tapado. Si cambias la altura del header, revisa este valor. */
+    scroll-padding-top: 5rem;
+  }
+  /* Si el usuario pide "reducir movimiento", sin scroll animado */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); /* 16px móvil → 18px escritorio */
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance; /* reparte las líneas de los titulares */
+  }
+  h1 {
+    font-size: clamp(2.5rem, 1.6rem + 4vw, 4.5rem);
+  }
+  h2 {
+    font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  }
+  h3 {
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  }
+
+  p {
+    /* 65ch ≈ 65 caracteres por línea: cómodo de leer. Para que un párrafo
+       ocupe todo el ancho, ponle la clase max-w-none. */
+    max-width: 65ch;
+    text-wrap: pretty; /* evita una sola palabra en la última línea */
+  }
+
+  a {
+    color: var(--accent-text);
+    text-underline-offset: 0.2em;
+  }
+
+  /* Anillo de foco al navegar con teclado (no aparece al hacer clic).
+     NUNCA pongas outline: none sin una alternativa visible. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+/* ========== 6. COMPONENTES (BEM) ==========
+   Solo para piezas que en clases de utilidad quedarían ilegibles o que
+   necesitan estados (:focus). El resto va con clases en el HTML. */
+@layer components {
+  /* Texto oculto a la vista pero leído por lectores de pantalla.
+     (Equivale a sr-only de Tailwind; se mantiene el nombre porque lo usa
+     el HTML en muchos sitios. No lo cambies por display:none.) */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* "Saltar al contenido": fuera de la pantalla hasta que recibe el foco
+     con el primer Tab; entonces baja a su sitio. */
+  .skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: translateY(-200%);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+}

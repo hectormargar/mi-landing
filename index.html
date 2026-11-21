@@ -107,7 +107,14 @@
       } catch (e) {}
     </script>
 
+    <!--
+      style.css = Tailwind COMPILADO desde estilos/input.css (no se edita a mano).
+      legacy.css = CSS antiguo, temporal mientras dura la migración a Tailwind;
+      va después y sin capas, así que manda donde aún tenga reglas. Se borra
+      (junto con esta línea) en la fase 6.
+    -->
     <link rel="stylesheet" href="estilos/style.css" />
+    <link rel="stylesheet" href="estilos/legacy.css" />
     <!-- defer: descarga en paralelo y se ejecuta cuando el HTML ya está leído -->
     <script src="js/main.js" defer></script>
   </head>
