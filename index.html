@@ -126,25 +126,39 @@
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
     <!-- ============ HEADER ============
-         Cabecera fija (position: sticky) que se queda arriba al hacer scroll.
+         Cabecera fija (sticky top-0) que se queda arriba al hacer scroll.
+         Fondo semitransparente (bg-bg/85) + desenfoque (backdrop-blur) = efecto
+         "cristal esmerilado". z-50: por encima de todo salvo el skip-link (100).
+         flex-wrap: sin JS, los enlaces bajan de línea si no caben.
          En móvil los enlaces se pliegan tras el botón "Menú" (lo gestiona main.js).
-         Los botones "Menú" y ☾ están ocultos por CSS hasta que carga el JS. -->
-    <header class="site-header">
-      <a href="#inicio" class="logo">Héctor Martín</a>
+         Las clases con js: solo se aplican cuando hay JS (clase "js" en <html>):
+         sin JS los botones "Menú" y ☾ están ocultos y el menú siempre visible. -->
+    <header
+      class="sticky top-0 z-50 flex min-h-[4.25rem] flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-bg/85 px-(--pad-x) backdrop-blur-[10px]"
+    >
+      <!-- mr-auto empuja el resto de elementos del header a la derecha -->
+      <a href="#inicio" class="mr-auto font-serif text-[1.25rem] text-text no-underline"
+        >Héctor Martín</a
+      >
 
+      <!-- La clase "nav" no da estilos: la usa main.js para cerrar el menú al
+           hacer clic fuera. -->
       <nav class="nav" aria-label="Principal">
         <!--
-          OJO: este botón debe ir JUSTO antes de <ul id="menu">. El CSS abre el
-          menú con el selector "botón + lista" (hermano inmediato).
+          OJO: este botón debe ir ANTES de <ul id="menu"> y dentro del mismo <nav>.
+          Lleva la clase "peer" de Tailwind, y la lista se abre con
+          "peer-aria-expanded:flex" (= cuando el botón tiene aria-expanded="true").
           aria-expanded guarda el estado abierto/cerrado (lo cambia main.js).
           aria-controls indica a los lectores de pantalla qué elemento controla.
           aria-label repite el texto visible: algunas auditorías (p. ej. la de
           Safari, "testButtonLabels") solo dan por bueno un botón si tiene este
           atributo. Debe coincidir SIEMPRE con el texto visible (WCAG 2.5.3);
           main.js actualiza los dos a la vez ("Menú" / "Cerrar").
+          "menu-toggle" no da estilos: es el gancho de main.js.
+          Solo con JS y solo en móvil (js:inline-flex md:js:hidden).
         -->
         <button
-          class="menu-toggle"
+          class="menu-toggle peer hidden h-10 cursor-pointer items-center rounded border border-line bg-transparent px-[0.9rem] py-0 font-sans text-[0.95rem] leading-[inherit] text-text js:inline-flex md:js:hidden"
           type="button"
           aria-label="Menú"
           aria-expanded="false"
@@ -152,22 +166,49 @@
         >
           Menú
         </button>
-        <!-- Cada href debe coincidir con el id de una <section> de <main> -->
-        <ul id="menu" class="nav__list">
-          <li><a href="#que-hago">Qué hago</a></li>
-          <li><a href="#casos">Casos</a></li>
-          <li><a href="#trayectoria">Trayectoria</a></li>
+        <!-- Cada href debe coincidir con el id de una <section> de <main>.
+             Sin JS: lista en línea. Con JS en móvil (js:…): desplegable bajo el
+             header, oculto hasta que se pulsa "Menú". En escritorio (md:js:…)
+             se deshace el desplegable y vuelve a estar en línea.
+             aria-[current=true]: sección activa, la marca main.js. -->
+        <ul
+          id="menu"
+          class="nav__list m-0 flex list-none gap-8 p-0 js:absolute js:inset-x-0 js:top-full js:hidden js:flex-col js:gap-0 js:border-b js:border-line js:bg-bg js:px-(--pad-x) js:pt-2 js:pb-6 js:peer-aria-expanded:flex md:js:static md:js:flex md:js:flex-row md:js:gap-8 md:js:border-b-0 md:js:bg-transparent md:js:p-0"
+        >
+          <!-- js:py-[0.85rem] en móvil: zonas táctiles de 44px o más -->
+          <li>
+            <a
+              href="#que-hago"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Qué hago</a
+            >
+          </li>
+          <li>
+            <a
+              href="#casos"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Casos</a
+            >
+          </li>
+          <li>
+            <a
+              href="#trayectoria"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Trayectoria</a
+            >
+          </li>
         </ul>
       </nav>
 
-      <!-- CTA del header: en móvil se oculta por CSS (allí el CTA está en el hero) -->
-      <a href="#contacto" class="btn btn--small">Escríbeme</a>
+      <!-- CTA del header: oculto en móvil (allí el CTA está en el hero) -->
+      <a href="#contacto" class="btn btn--small hidden md:inline-block">Escríbeme</a>
       <!--
         Botón de tema claro/oscuro. El icono y el aria-label iniciales son los del
         modo claro; main.js los actualiza al cargar y en cada clic.
+        "theme-toggle" no da estilos: es el gancho de main.js. Solo con JS.
       -->
       <button
-        class="theme-toggle"
+        class="theme-toggle hidden h-10 w-10 cursor-pointer place-items-center rounded border border-line bg-transparent p-0 font-sans text-[0.95rem] leading-[inherit] text-text js:inline-grid"
         type="button"
         aria-label="Cambiar a modo oscuro"
       >
@@ -181,20 +222,35 @@
            Primer pantallazo: quién es, qué hace y dos llamadas a la acción.
            Solo debe haber UN <h1> en toda la página (está aquí); el resto de
            títulos son h2/h3. Importante para SEO y lectores de pantalla.
-           En móvil la foto sube arriba; en escritorio va a la derecha (lo hace el CSS). -->
-      <section id="inicio" class="hero">
-        <div class="hero__text">
-          <p class="eyebrow">CX &amp; AI Solutions Architect · Valladolid</p>
-          <h1>Del reto de negocio a la solución en producción.</h1>
-          <p class="lead">
+           Móvil: una columna, con la foto arriba (-order-1) y pequeña.
+           Escritorio (lg:, ≥ 56rem): texto | foto, el texto algo más ancho (1.3fr 1fr). -->
+      <section
+        id="inicio"
+        class="grid gap-8 px-(--pad-x) py-[clamp(3rem,8vw,7rem)] lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-16"
+      >
+        <div>
+          <!-- "Eyebrow": la línea pequeña en mayúsculas encima del título -->
+          <p
+            class="mt-0 mb-5 text-[0.8rem] font-semibold tracking-[0.12em] text-accent-text uppercase"
+          >
+            CX &amp; AI Solutions Architect · Valladolid
+          </p>
+          <h1 class="mt-0 mb-6 max-w-[16ch]">
+            Del reto de negocio a la solución en producción.
+          </h1>
+          <!-- Párrafo de entrada, algo más grande que el texto normal -->
+          <p class="mt-0 mb-10 text-[1.2em] text-text-muted">
             Diseño experiencias de cliente donde personas e IA trabajan juntas:
             Contact Center e IA conversacional que escalan sin perder lo humano.
           </p>
-          <div class="hero__actions">
+          <div class="flex flex-wrap items-center gap-7">
             <a href="#casos" class="btn">Ver casos</a>
             <!-- "download" fuerza la descarga del PDF en vez de abrirlo.
                  aria-hidden en la flecha: es decorativa, que no la lea el lector de pantalla. -->
-            <a href="imagenes/CV-Hector-Martin.pdf" class="link-arrow" download
+            <a
+              href="imagenes/CV-Hector-Martin.pdf"
+              class="font-semibold no-underline hover:underline"
+              download
               >Descargar CV <span aria-hidden="true">↓</span></a
             >
           </div>
@@ -207,9 +263,10 @@
           fetchpriority="high": es la imagen principal de la primera pantalla,
           así el navegador la descarga antes que otros recursos menos urgentes.
           No le pongas loading="lazy" (retrasaría justo lo primero que se ve).
+          En el HTML va después del texto; -order-1 la sube visualmente en móvil.
         -->
         <img
-          class="hero__photo"
+          class="-order-1 w-44 lg:order-none lg:w-full lg:max-w-104 lg:justify-self-end"
           src="imagenes/hector-martin.webp"
           fetchpriority="high"
           alt="Héctor Martín, sonriendo con los brazos cruzados"
@@ -224,7 +281,7 @@
            Se usa una lista de definiciones (<dl>): <dt> = dato destacado,
            <dd> = explicación. El <div> que agrupa cada par es HTML válido y
            permite maquetarlos como columnas. Para añadir un dato, copia un <div> entero. -->
-      <section class="credibility" aria-label="Experiencia y plataformas">
+      <section class="credibility px-(--pad-x)" aria-label="Experiencia y plataformas">
         <dl class="credibility__list">
           <div>
             <dt>12+ años</dt>
@@ -253,7 +310,7 @@
            pantalla lea solo el título ("Estrategia…", no "01 Estrategia…").
            Tarjetas: cada <article class="card"> es una capacidad. La rejilla se
            adapta sola al número de tarjetas (no hace falta tocar el CSS). -->
-      <section id="que-hago" class="section">
+      <section id="que-hago" class="section px-(--pad-x) py-(--space-section)">
         <h2>
           <span class="section__num" aria-hidden="true">01</span> Estrategia,
           arquitectura e ingeniería en un mismo perfil
@@ -294,7 +351,7 @@
            Estado: usa "status status--prod" (Producción) o "status status--poc" (PoC).
            IMPORTANTE (confidencialidad): los casos son reales pero SIN nombres de
            clientes, y los esquemas son conceptuales. Mantén ese criterio. -->
-      <section id="casos" class="section">
+      <section id="casos" class="section px-(--pad-x) py-(--space-section)">
         <h2>
           <span class="section__num" aria-hidden="true">02</span> Tres
           proyectos, tres dimensiones del perfil
@@ -483,7 +540,7 @@
       <!-- ============ 5. CÓMO TRABAJO ============
            Tiene id pero NO está en el menú (decisión de diseño: menú corto).
            Su fondo alterno se define en el CSS por su id (#como-trabajo). -->
-      <section id="como-trabajo" class="section">
+      <section id="como-trabajo" class="section px-(--pad-x) py-(--space-section)">
         <h2>
           <span class="section__num" aria-hidden="true">03</span> Del problema a
           producción
@@ -522,7 +579,7 @@
       </section>
 
       <!-- ============ 6. TRAYECTORIA ============ -->
-      <section id="trayectoria" class="section">
+      <section id="trayectoria" class="section px-(--pad-x) py-(--space-section)">
         <h2>
           <span class="section__num" aria-hidden="true">04</span> Más de 12 años
           en Contact Center
@@ -678,7 +735,7 @@
            EL EMAIL APARECE DOS VECES (botón y enlace de texto): si cambia, cámbialo
            en ambos. En el botón, "?subject=" rellena el asunto; los espacios van
            codificados como %20 (es una URL). -->
-      <section id="contacto" class="contact">
+      <section id="contacto" class="contact px-(--pad-x)">
         <h2>¿Tienes un reto de CX, Contact Center o IA?</h2>
         <p>Hablemos de arquitectura, integración y tecnología.</p>
         <a
@@ -726,7 +783,7 @@
 
     <!-- ============ FOOTER ============
          El año está escrito a mano: actualízalo cada año. -->
-    <footer class="site-footer">
+    <footer class="site-footer px-(--pad-x)">
       <p>© 2026 Héctor Martín · CX &amp; AI Solutions Architect</p>
     </footer>
   </body>

@@ -157,6 +157,23 @@
     color-scheme: dark;
   }
 
+  /* --- Layout ---
+     No hay un <div class="container">: cada bloque de primer nivel
+     (header, <section>, footer) ocupa todo el ancho (fondos a sangre) y
+     centra su contenido con un padding lateral calculado, que en el HTML
+     es la clase px-(--pad-x):
+       --pad-x = el mayor de: el margen mínimo (--gutter, para móvil) o la
+                 mitad de lo que sobra cuando la pantalla es más ancha que
+                 --max (para centrar en pantallas grandes).
+     Para hacer la web más ancha o estrecha, cambia solo --max.
+     Las secciones normales usan py-(--space-section) como espacio vertical. */
+  :root {
+    --max: 72rem; /* ancho máximo del contenido */
+    --gutter: clamp(1.25rem, 4vw, 2.5rem); /* margen lateral mínimo */
+    --pad-x: max(var(--gutter), (100% - var(--max)) / 2);
+    --space-section: clamp(4.5rem, 10vw, 7.5rem);
+  }
+
   /* border-box: el padding cuenta dentro del ancho declarado */
   *,
   *::before,
@@ -265,5 +282,30 @@
   }
   .skip-link:focus {
     transform: none;
+  }
+
+  /* --- Botones ---
+     .btn es un <a> con aspecto de botón (navega, no ejecuta acciones).
+     Es componente porque se repite en varios sitios con el mismo aspecto.
+     Variantes: .btn--small (header) y .btn--inverse (Contacto; de momento
+     sigue en legacy.css, se migra en la fase 4).
+     El hover mezcla el acento con un poco del color de texto: lo oscurece
+     en claro y lo aclara en oscuro sin definir un color nuevo. */
+  .btn {
+    display: inline-block;
+    padding: 0.85rem 1.6rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  .btn:hover {
+    background: color-mix(in srgb, var(--accent) 85%, var(--text));
+  }
+  .btn--small {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
   }
 }

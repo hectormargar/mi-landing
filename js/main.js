@@ -84,11 +84,13 @@ pintarBoton();
 
    El estado abierto/cerrado se guarda en el atributo aria-expanded del botón
    ("true" / "false"). No hay variable JS ni clase "open": el propio CSS
-   muestra la lista con el selector
-       .menu-toggle[aria-expanded="true"] + .nav__list
-   OJO: ese "+" significa "hermano inmediatamente siguiente". En el HTML el
-   <button class="menu-toggle"> tiene que ir JUSTO antes de <ul id="menu">.
-   Si metes algo entre medias, el menú dejará de abrirse.
+   muestra la lista con las clases de Tailwind del HTML:
+       botón:  class="peer …"
+       lista:  class="… js:peer-aria-expanded:flex"
+   ("peer-aria-expanded" = cuando un hermano anterior con la clase "peer"
+   tiene aria-expanded="true"). OJO: en el HTML el <button class="menu-toggle">
+   tiene que ir ANTES de <ul id="menu"> y dentro del mismo <nav>; si no, el
+   menú dejará de abrirse.
 */
 const menuBtn = document.querySelector(".menu-toggle");
 const menu = document.getElementById("menu");
@@ -147,7 +149,7 @@ document.addEventListener("click", (e) => {
    <section id="..."> dentro de <main>. Cuando una cruza el centro de la
    pantalla, se busca el enlace del menú cuyo href sea "#<id de la sección>"
    y se le pone aria-current="true". El CSS colorea ese enlace
-   (ver ".nav__list a[aria-current="true"]").
+   (clase "aria-[current=true]:text-accent-text" en los enlaces del menú).
 
    Para añadir una sección nueva al menú:
      1. Dale un id a la <section> en index.html (ej. id="blog").
