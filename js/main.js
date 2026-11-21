@@ -22,11 +22,11 @@
      (querySelector) y en estilos/style.css.
    ========================================================= */
 
-// Marca que el JS ha cargado: el CSS muestra entonces los botones Menú y ☀/☾.
-// Sin esta clase, esos botones están ocultos (no servirían de nada sin JS)
-// y el menú se ve siempre desplegado. Ver ".js .theme-toggle" y
-// ".js .menu-toggle" en style.css.
-document.documentElement.classList.add("js");
+// La clase "js" en <html> (la que hace que el CSS muestre los botones Menú
+// y ☀/☾ y pliegue el menú móvil) la pone el script inline del <head> de
+// index.html, no este archivo: así se aplica antes del primer pintado y el
+// menú no "parpadea" desplegado. Ver ".js .theme-toggle" y ".js .menu-toggle"
+// en style.css.
 
 /* ========== 1. TEMA CLARO / OSCURO ==========
    Cómo funciona:

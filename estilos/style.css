@@ -317,7 +317,8 @@ section,
 }
 
 /* Los botones que dependen de JS solo se muestran cuando el JS ha cargado.
-   main.js añade la clase "js" a <html>; por eso las reglas que los
+   El script inline del <head> (index.html) añade la clase "js" a <html>
+   antes de pintar; por eso las reglas que los
    muestran empiezan por ".js ". Sin JS, un botón que no hace nada
    confundiría al visitante. */
 .menu-toggle,
@@ -346,40 +347,63 @@ section,
   place-items: center;
 }
 
-/* --- Menú móvil (pantallas de menos de 48rem) ---
-   47.99rem y no 48rem para no solaparse con los @media (min-width: 48rem)
-   de más abajo justo en el píxel frontera.
+/* --- Menú móvil (base, mobile first) ---
+   Estilos para móvil por defecto; el @media (min-width: 48rem) de justo
+   debajo los deshace en escritorio (menú en línea, sin botón "Menú").
    Todo va prefijado con ".js": sin JS, el menú se queda visible y en línea
    (el header hace wrap) en vez de esconderse sin forma de abrirlo. */
-@media (max-width: 47.99rem) {
+.js .menu-toggle {
+  display: inline-flex;
+  align-items: center;
+}
+.js .nav__list {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.5rem var(--pad-x) 1.5rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+/* El menú se abre cuando el botón tiene aria-expanded="true" (lo cambia
+   main.js). El "+" exige que la lista sea el hermano INMEDIATO del botón
+   en el HTML: no metas nada entre ambos. */
+.js .menu-toggle[aria-expanded="true"] + .nav__list {
+  display: flex;
+}
+.js .nav__list a {
+  display: block;
+  padding: 0.85rem 0; /* objetivos táctiles de 44px o más */
+}
+.site-header .btn--small {
+  display: none; /* en móvil el CTA vive en el hero */
+}
+
+/* Escritorio: menú siempre desplegado y en línea, sin botón "Menú".
+   Devuelve a .nav__list los valores de su regla base (gap: 2rem, sin
+   padding). Si cambias esa regla, revisa también esta. */
+@media (min-width: 48rem) {
   .js .menu-toggle {
-    display: inline-flex;
-    align-items: center;
+    display: none;
   }
   .js .nav__list {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    gap: 0;
-    padding: 0.5rem var(--pad-x) 1.5rem;
-    background: var(--bg);
-    border-bottom: 1px solid var(--line);
-  }
-  /* El menú se abre cuando el botón tiene aria-expanded="true" (lo cambia
-     main.js). El "+" exige que la lista sea el hermano INMEDIATO del botón
-     en el HTML: no metas nada entre ambos. */
-  .js .menu-toggle[aria-expanded="true"] + .nav__list {
     display: flex;
+    position: static;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 0;
+    background: none;
+    border-bottom: 0;
   }
   .js .nav__list a {
-    display: block;
-    padding: 0.85rem 0; /* objetivos táctiles de 44px o más */
+    display: inline;
+    padding: 0;
   }
   .site-header .btn--small {
-    display: none; /* en móvil el CTA vive en el hero */
+    display: inline-block;
   }
 }
 
@@ -1058,9 +1082,12 @@ details ul:not(.tags) {
   background: var(--on-accent);
   color: var(--accent);
 }
+/* En hover el fondo se tiñe un poco de acento y el texto pasa a
+   --accent-text (más oscuro): con --accent el contraste bajaba de 4.5:1. */
 .btn--inverse:hover,
 .contact .btn--inverse:hover {
   background: color-mix(in srgb, var(--on-accent) 88%, var(--accent));
+  color: var(--accent-text);
 }
 
 .contact > .contact__links {
@@ -1148,7 +1175,10 @@ body::before,
   pointer-events: none; /* que no bloquee clics sobre el contenido */
   background: var(--wave-color);
   opacity: var(--wave-opacity);
-  /* ondas + desvanecido en los laterales */
+  /* ondas + desvanecido en los laterales.
+     EXCEPCIÓN a "nunca hex a mano": en una máscara solo cuenta la
+     transparencia, no el color, así que #000 = "opaco" y no depende del
+     tema. No lo cambies por una variable. */
   -webkit-mask-image:
     url("../imagenes/ondas.svg"),
     linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
@@ -1207,7 +1237,9 @@ body::before {
   height: 70%;
   transform: translateY(-50%);
   --wave-color: var(--on-accent);
-  --wave-opacity: 0.1;
+  /* 0.05 como máximo: más opacas aclaran el fondo bajo el texto blanco y
+     el contraste baja de 4.5:1 en modo claro. */
+  --wave-opacity: 0.05;
 }
 
 /* =========================================================

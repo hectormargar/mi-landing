@@ -94,8 +94,13 @@
       defer), el navegador pintaría primero en claro y luego saltaría a oscuro.
       La clave "tema" de localStorage debe coincidir con la de js/main.js.
       El try/catch evita errores si el navegador bloquea localStorage.
+      También pone la clase "js" en <html> (antes lo hacía main.js): así el
+      CSS pliega el menú móvil desde el primer pintado, sin que se vea
+      desplegado un instante. Sin JS este script no corre y el menú se
+      queda visible (mejora progresiva).
     -->
     <script>
+      document.documentElement.classList.add("js");
       try {
         const tema = localStorage.getItem("tema");
         if (tema) document.documentElement.dataset.theme = tema;
