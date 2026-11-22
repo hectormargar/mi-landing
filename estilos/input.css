@@ -13,14 +13,15 @@
    Nunca edites estilos/style.css a mano: se sobrescribe al compilar.
    GitHub Pages no compila: sube style.css compilado en el mismo commit.
 
-   MIGRACIÓN EN CURSO (fases 1-6, rama feat/tailwind)
-   Mientras dure, index.html carga DOS hojas: style.css (Tailwind) y
-   legacy.css (el CSS antiguo). Tailwind mete todo en capas (@layer) y
-   el CSS sin capa siempre gana, así que legacy.css manda donde aún
-   tenga reglas. En cada fase se pasan secciones a clases de Tailwind y
-   se borran de legacy.css. En la fase 6 legacy.css desaparece.
-   Preflight (el reset de Tailwind) está DESACTIVADO hasta la fase 6:
-   la web aún depende de los márgenes por defecto del navegador.
+   Dónde va cada cosa:
+     - Casi todo el diseño son clases de utilidad en index.html.
+     - Aquí solo: tema (colores, fuentes, puntos de corte), estilos base
+       de etiquetas y los pocos componentes BEM que con utilidades
+       quedarían ilegibles (pseudo-elementos, contadores, máscaras…).
+   Preflight (el reset de Tailwind) está ACTIVO: quita márgenes, viñetas
+   y estilos por defecto del navegador. Por eso cada elemento lleva sus
+   márgenes explícitos en el HTML (mt-0 mb-4…) y las listas con viñetas
+   necesitan list-disc.
 
    Orden de este archivo:
      1. Importación de Tailwind (capas)
@@ -32,12 +33,12 @@
    ========================================================= */
 
 /* ========== 1. TAILWIND ==========
-   Importación por partes para poder dejar fuera Preflight (ver arriba).
-   En la fase 6 se añade: @import "tailwindcss/preflight.css" layer(base);
-   source(none) + @source: Tailwind solo busca clases en estos dos
-   archivos (si no, leería también CLAUDE.md, README, legacy.css…). */
+   Importación por partes (equivale a @import "tailwindcss") para poder
+   usar source(none) + @source: Tailwind solo busca clases en estos dos
+   archivos (si no, leería también CLAUDE.md, README…). */
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @source "../index.html";
 @source "../js/main.js";
@@ -174,13 +175,6 @@
     --space-section: clamp(4.5rem, 10vw, 7.5rem);
   }
 
-  /* border-box: el padding cuenta dentro del ancho declarado */
-  *,
-  *::before,
-  *::after {
-    box-sizing: border-box;
-  }
-
   html {
     scroll-behavior: smooth; /* scroll animado al pulsar enlaces #ancla */
     /* Hueco para el header fijo: al saltar a una sección, su título no
@@ -230,8 +224,11 @@
     text-wrap: pretty; /* evita una sola palabra en la última línea */
   }
 
+  /* Preflight quita el subrayado de los enlaces: se recupera aquí para
+     el texto corrido. Donde no se quiera, clase no-underline. */
   a {
     color: var(--accent-text);
+    text-decoration-line: underline;
     text-underline-offset: 0.2em;
   }
 
@@ -287,8 +284,8 @@
   /* --- Botones ---
      .btn es un <a> con aspecto de botón (navega, no ejecuta acciones).
      Es componente porque se repite en varios sitios con el mismo aspecto.
-     Variantes: .btn--small (header) y .btn--inverse (Contacto; de momento
-     sigue en legacy.css, se migra en la fase 4).
+     Variantes: .btn--small (header) y .btn--inverse (Contacto).
+     También lo reutiliza el botón "Volver arriba", con utilidades encima.
      El hover mezcla el acento con un poco del color de texto: lo oscurece
      en claro y lo aclara en oscuro sin definir un color nuevo. */
   .btn {
@@ -307,6 +304,17 @@
   .btn--small {
     padding: 0.55rem 1.1rem;
     font-size: 0.9rem;
+  }
+  /* Sobre el fondo de acento de Contacto: fondo claro y texto de acento.
+     En hover el fondo se tiñe un poco de acento y el texto pasa a
+     --accent-text (más oscuro): con --accent el contraste bajaba de 4.5:1. */
+  .btn--inverse {
+    background: var(--on-accent);
+    color: var(--accent);
+  }
+  .btn--inverse:hover {
+    background: color-mix(in srgb, var(--on-accent) 88%, var(--accent));
+    color: var(--accent-text);
   }
 
   /* --- Flujo de los casos (<figure class="flow"> con un <ol> dentro) ---
@@ -367,5 +375,243 @@
       transform: translateY(-50%);
       text-align: center;
     }
+  }
+  /* --- Trayectoria: leyenda (● Puesto · ◇ Certificación) --- */
+  .legend::before {
+    content: "";
+    display: inline-block;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  .legend--role::before {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .legend--cert::before {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1.5px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  /* --- Trayectoria: cronología con puestos y certificaciones ---
+     Cómo está construida:
+     - La línea vertical es el ::before de la <ol class="timeline">.
+     - Cada marcador (● o ◇) es el ::before de su <li>.
+     - Ambos se colocan con la MISMA variable --marker-x, así la línea pasa
+       siempre por el centro de los marcadores (translateX(-50%) los centra).
+       Si mueves la línea, cambia solo --marker-x.
+     - En escritorio (md), --marker-x se recalcula a partir de la columna
+       de fechas (--date-col): fechas | línea | contenido. La línea queda
+       en medio del hueco entre columnas: --date-col + la mitad del
+       column-gap (3.5rem / 2 = 1.75rem). Si cambias column-gap, actualiza
+       ese 1.75rem.
+     - El "top" de cada marcador = padding superior del ítem + media línea
+       de texto, para que quede a la altura de la fecha. Si cambias el
+       padding-block de --role o --cert, cambia también su top. */
+  .timeline {
+    --marker-x: 0.45rem; /* posición horizontal de la línea (móvil) */
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    left: var(--marker-x);
+    width: 1px;
+    background: color-mix(in srgb, var(--text) 25%, transparent);
+  }
+
+  .timeline__item {
+    position: relative;
+    display: grid;
+    gap: 0.15rem 0;
+    padding-left: 2.25rem;
+  }
+  .timeline__item--role {
+    padding-block: 1.25rem;
+  }
+  .timeline__item--cert {
+    padding-block: 0.5rem;
+  }
+
+  .timeline__item::before {
+    content: "";
+    position: absolute;
+    left: var(--marker-x);
+  }
+  .timeline__item--role::before {
+    top: calc(1.25rem + 0.45em);
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--bg); /* hueco alrededor del punto */
+    transform: translateX(-50%);
+  }
+  .timeline__item--cert::before {
+    top: calc(0.5rem + 0.55em);
+    width: 0.55rem;
+    height: 0.55rem;
+    border: 1.5px solid var(--accent);
+    background: var(--bg);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .timeline__date {
+    margin: 0;
+  }
+  .timeline__item--role .timeline__date {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--accent-text);
+  }
+  .timeline__item--cert .timeline__date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timeline__content h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  .timeline__content p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .timeline__item--cert .timeline__content p {
+    font-size: 0.95rem;
+  }
+
+  .timeline__kind {
+    margin-right: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  @variant md {
+    .timeline {
+      --date-col: 9rem;
+      --marker-x: calc(var(--date-col) + 1.75rem);
+    }
+    .timeline__item {
+      grid-template-columns: var(--date-col) 1fr;
+      column-gap: 3.5rem;
+      padding-left: 0;
+    }
+    .timeline__date {
+      text-align: right;
+    }
+  }
+
+  /* --- Aparición suave al hacer scroll (la activa main.js) ---
+     main.js pone .reveal (estado inicial: invisible y 1rem más abajo) y
+     luego .is-visible cuando el elemento entra en pantalla. Qué elementos
+     se animan se decide en main.js; aquí, cómo (para hacerlo más rápido o
+     lento, cambia los 0.6s). Solo si no se pide reducir movimiento.
+     OJO: "transition" sustituye entera a la del .btn (no se suman). Por
+     eso se repite background-color: si no, el botón de Contacto (que
+     también recibe .reveal) perdería su transición de hover. */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(1rem);
+      transition:
+        opacity 0.6s ease,
+        transform 0.6s ease,
+        background-color 0.2s;
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* Al imprimir no hay scroll: lo que no llegó a aparecer saldría en
+     blanco. Se fuerza todo a visible. */
+  @media print {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* --- Motivo de fondo: ondas de voz ---
+     .waves pinta las ondas en su ::before. Dos variantes:
+       .waves--page    (en <body>): capa fija detrás de toda la página, en la
+                       parte media-baja de la pantalla; el contenido pasa por
+                       encima al hacer scroll.
+       .waves--contact (en Contacto): eco en blanco sobre el bloque de color,
+                       que si no taparía la capa fija. La sección necesita
+                       relative + isolate (en el HTML) para que el z-index:-1
+                       deje las ondas detrás del texto pero delante del fondo.
+     Cómo funciona la máscara: el ::before es un rectángulo de color liso
+     (--wave-color). mask-image deja ver ese color SOLO donde el SVG tiene
+     trazo, y lo intersecta (mask-composite) con un degradado para que las
+     ondas se desvanezcan en los laterales. Las propiedades -webkit- son
+     para Safari: no las quites.
+     Para cambiar el dibujo: sustituye imagenes/ondas.svg (solo importa su
+     forma; su color da igual). Para hacerlas más o menos visibles:
+     --wave-opacity.
+     IMPORTANTE: la capa de página va detrás (z-index: -1), así que una
+     sección con fondo OPACO la tapa. Las de fondo alterno usan
+     bg-bg-alt/80 (semitransparente): si añades otra, usa lo mismo. */
+  .waves::before {
+    content: "";
+    left: 0;
+    right: 0;
+    z-index: -1;
+    pointer-events: none; /* que no bloquee clics sobre el contenido */
+    background: var(--wave-color);
+    opacity: var(--wave-opacity);
+    /* EXCEPCIÓN a "nunca hex a mano": en una máscara solo cuenta la
+       transparencia, no el color, así que #000 = "opaco" y no depende del
+       tema. No lo cambies por una variable. */
+    -webkit-mask-image:
+      url("../imagenes/ondas.svg"),
+      linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+    mask-image:
+      url("../imagenes/ondas.svg"),
+      linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+    /* max(100%, 60rem): en móvil el SVG no se encoge por debajo de 60rem,
+       para que las ondas no queden aplastadas (se recortan por los lados) */
+    -webkit-mask-size:
+      max(100%, 60rem) 100%,
+      100% 100%;
+    mask-size:
+      max(100%, 60rem) 100%,
+      100% 100%;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .waves--page::before {
+    position: fixed;
+    top: 35vh;
+    height: 50vh;
+    --wave-color: var(--accent);
+    --wave-opacity: 0.11;
+  }
+  .waves--contact::before {
+    position: absolute;
+    top: 50%;
+    height: 70%;
+    transform: translateY(-50%);
+    --wave-color: var(--on-accent);
+    /* 0.05 como máximo: más opacas aclaran el fondo bajo el texto blanco y
+       el contraste baja de 4.5:1 en modo claro. */
+    --wave-opacity: 0.05;
   }
 }

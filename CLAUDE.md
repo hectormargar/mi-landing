@@ -4,11 +4,6 @@ Landing personal de Héctor Martín (CX & AI Solutions Architect). Una sola pág
 estática: HTML + Tailwind CSS + JS vanilla. Sin npm, sin framework JS, sin backend.
 Contenido y comentarios en español.
 
-> ⚠️ **Migración a Tailwind pendiente.** Los estilos actuales son CSS escrito a mano
-> en `estilos/style.css`. Las reglas de abajo describen cómo debe quedar el
-> proyecto. Hasta completar la migración, cualquier cambio de estilos se hace ya
-> con Tailwind o se deja anotado para la migración; no añadas CSS nuevo a mano.
-
 ## Antes de tocar nada
 
 Cada fichero empieza con "NOTAS DE TRASPASO": léelas primero, son la fuente de verdad.

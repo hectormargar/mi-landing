@@ -19,14 +19,16 @@
        4. Aparición suave al hacer scroll
        5. Botón "Volver arriba"
    - Si renombras clases o ids en el HTML, búscalas también aquí
-     (querySelector) y en estilos/style.css.
+     (querySelector) y en estilos/input.css. Varias clases del HTML
+     (card, case, steps, to-top…) no dan estilos: existen solo para
+     este archivo, no las borres.
    ========================================================= */
 
 // La clase "js" en <html> (la que hace que el CSS muestre los botones Menú
 // y ☀/☾ y pliegue el menú móvil) la pone el script inline del <head> de
 // index.html, no este archivo: así se aplica antes del primer pintado y el
-// menú no "parpadea" desplegado. Ver ".js .theme-toggle" y ".js .menu-toggle"
-// en style.css.
+// menú no "parpadea" desplegado. En el HTML, las clases con prefijo js:
+// (variante propia definida en estilos/input.css) solo se aplican con JS.
 
 /* ========== 1. TEMA CLARO / OSCURO ==========
    Cómo funciona:
@@ -191,8 +193,9 @@ document
    Reparto de trabajo JS / CSS:
    - El JS añade la clase "reveal" (estado inicial: invisible) y, cuando el
      elemento entra en pantalla, la clase "is-visible" (estado final).
-   - La animación en sí (opacity, transform, duración) está en style.css,
-     "Parte 5". Para cambiar velocidad o efecto, toca el CSS, no esto.
+   - La animación en sí (opacity, transform, duración) es el componente
+     .reveal de estilos/input.css. Para cambiar velocidad o efecto, toca
+     el CSS, no esto.
 
    Solo se activa si el usuario no ha pedido reducir el movimiento
    (ajuste de accesibilidad del sistema operativo). Respétalo siempre.
@@ -263,7 +266,8 @@ if (!sinMovimiento) {
    El botón (<a class="to-top"> en index.html) solo tiene sentido cuando ya
    no se ve el principio de la página. Un IntersectionObserver vigila el
    hero (#inicio): mientras asoma en pantalla, el botón está oculto; cuando
-   sale, se le añade .to-top--visible y el CSS lo muestra ("Parte 7").
+   sale, se le añade .to-top--visible y el CSS lo muestra (clases
+   js:not-[.to-top--visible]:… en el HTML del botón).
 
    El scroll suave y el salto a #inicio no son cosa del JS: el botón es un
    enlace normal y el desplazamiento animado lo da scroll-behavior en el CSS.
