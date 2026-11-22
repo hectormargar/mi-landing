@@ -2,3 +2,5 @@
 node_modules/
 .env
 *.log
+# Ejecutable de Tailwind (CLI standalone): cada uno se lo descarga, no se sube
+/tailwindcss

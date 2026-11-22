@@ -19,14 +19,16 @@
        4. Aparición suave al hacer scroll
        5. Botón "Volver arriba"
    - Si renombras clases o ids en el HTML, búscalas también aquí
-     (querySelector) y en estilos/style.css.
+     (querySelector) y en estilos/input.css. Varias clases del HTML
+     (card, case, steps, to-top…) no dan estilos: existen solo para
+     este archivo, no las borres.
    ========================================================= */
 
 // La clase "js" en <html> (la que hace que el CSS muestre los botones Menú
 // y ☀/☾ y pliegue el menú móvil) la pone el script inline del <head> de
 // index.html, no este archivo: así se aplica antes del primer pintado y el
-// menú no "parpadea" desplegado. Ver ".js .theme-toggle" y ".js .menu-toggle"
-// en style.css.
+// menú no "parpadea" desplegado. En el HTML, las clases con prefijo js:
+// (variante propia definida en estilos/input.css) solo se aplican con JS.
 
 /* ========== 1. TEMA CLARO / OSCURO ==========
    Cómo funciona:
@@ -84,11 +86,13 @@ pintarBoton();
 
    El estado abierto/cerrado se guarda en el atributo aria-expanded del botón
    ("true" / "false"). No hay variable JS ni clase "open": el propio CSS
-   muestra la lista con el selector
-       .menu-toggle[aria-expanded="true"] + .nav__list
-   OJO: ese "+" significa "hermano inmediatamente siguiente". En el HTML el
-   <button class="menu-toggle"> tiene que ir JUSTO antes de <ul id="menu">.
-   Si metes algo entre medias, el menú dejará de abrirse.
+   muestra la lista con las clases de Tailwind del HTML:
+       botón:  class="peer …"
+       lista:  class="… js:peer-aria-expanded:flex"
+   ("peer-aria-expanded" = cuando un hermano anterior con la clase "peer"
+   tiene aria-expanded="true"). OJO: en el HTML el <button class="menu-toggle">
+   tiene que ir ANTES de <ul id="menu"> y dentro del mismo <nav>; si no, el
+   menú dejará de abrirse.
 */
 const menuBtn = document.querySelector(".menu-toggle");
 const menu = document.getElementById("menu");
@@ -147,7 +151,7 @@ document.addEventListener("click", (e) => {
    <section id="..."> dentro de <main>. Cuando una cruza el centro de la
    pantalla, se busca el enlace del menú cuyo href sea "#<id de la sección>"
    y se le pone aria-current="true". El CSS colorea ese enlace
-   (ver ".nav__list a[aria-current="true"]").
+   (clase "aria-[current=true]:text-accent-text" en los enlaces del menú).
 
    Para añadir una sección nueva al menú:
      1. Dale un id a la <section> en index.html (ej. id="blog").
@@ -189,8 +193,9 @@ document
    Reparto de trabajo JS / CSS:
    - El JS añade la clase "reveal" (estado inicial: invisible) y, cuando el
      elemento entra en pantalla, la clase "is-visible" (estado final).
-   - La animación en sí (opacity, transform, duración) está en style.css,
-     "Parte 5". Para cambiar velocidad o efecto, toca el CSS, no esto.
+   - La animación en sí (opacity, transform, duración) es el componente
+     .reveal de estilos/input.css. Para cambiar velocidad o efecto, toca
+     el CSS, no esto.
 
    Solo se activa si el usuario no ha pedido reducir el movimiento
    (ajuste de accesibilidad del sistema operativo). Respétalo siempre.
@@ -261,7 +266,8 @@ if (!sinMovimiento) {
    El botón (<a class="to-top"> en index.html) solo tiene sentido cuando ya
    no se ve el principio de la página. Un IntersectionObserver vigila el
    hero (#inicio): mientras asoma en pantalla, el botón está oculto; cuando
-   sale, se le añade .to-top--visible y el CSS lo muestra ("Parte 7").
+   sale, se le añade .to-top--visible y el CSS lo muestra (clases
+   js:not-[.to-top--visible]:… en el HTML del botón).
 
    El scroll suave y el salto a #inicio no son cosa del JS: el botón es un
    enlace normal y el desplazamiento animado lo da scroll-behavior en el CSS.

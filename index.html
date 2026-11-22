@@ -6,17 +6,21 @@
   =====================================================================
 
   QUÉ ES
-    Una web de una sola página, 100% estática: HTML + CSS + JS puros.
-    No hay npm, ni framework, ni paso de compilación, ni backend.
-    Para verla en local basta con abrir este archivo en el navegador
-    (o servir la carpeta con cualquier servidor estático, p. ej.
-    `python3 -m http.server` y abrir http://localhost:8000).
-    Para publicarla, sube la carpeta tal cual a cualquier hosting
-    estático (GitHub Pages, Netlify, un bucket S3…).
+    Una web de una sola página, 100% estática: HTML + Tailwind CSS + JS
+    vanilla. No hay npm, ni framework JS, ni backend.
+    Los estilos son clases de Tailwind en este HTML. Tailwind se compila
+    en local con su CLI standalone (un ejecutable, sin npm):
+      ./tailwindcss -i estilos/input.css -o estilos/style.css --minify
+    Para verla en local: `python3 -m http.server` y abrir
+    http://localhost:8000. Se publica con GitHub Pages (rama main):
+    compila y sube estilos/style.css en el mismo commit que el HTML.
 
   ESTRUCTURA DE CARPETAS
-    index.html            → este archivo: TODO el contenido (textos)
-    estilos/style.css     → todo el diseño (colores, tipografía, layout)
+    index.html            → este archivo: TODO el contenido (textos) y las
+                            clases de Tailwind (el diseño)
+    estilos/input.css     → entrada de Tailwind: tema (colores, fuentes),
+                            estilos base y componentes BEM
+    estilos/style.css     → CSS COMPILADO por Tailwind: no se edita a mano
     js/main.js            → extras: tema oscuro, menú móvil, animaciones,
                             botón "Volver arriba"
     fuentes/              → tipografías Inter y Fraunces (alojadas en local,
@@ -27,17 +31,21 @@
 
   CÓMO CAMBIAR COSAS HABITUALES
     - Textos: se editan directamente aquí, en el HTML.
-    - Colores: variables al principio de style.css (:root). No cambies
-      colores "a mano" en otras reglas; usa siempre las variables.
+    - Colores: variables en estilos/input.css (claro y oscuro) y clases
+      del tema (bg-bg, text-accent…). Nunca colores "a mano" (hex o
+      valores arbitrarios tipo bg-[#123456]).
     - Actualizar el CV: sustituye imagenes/CV-Hector-Martin.pdf manteniendo
       el MISMO nombre (está enlazado en dos sitios: hero y contacto).
     - El email de contacto también aparece dos veces (sección Contacto).
     - El año del copyright del footer está escrito a mano.
 
   CONVENCIONES
-    - Clases con nomenclatura BEM: bloque__elemento--modificador
-      (ej. .case__body, .status--prod). Ayuda a saber de un vistazo qué
-      regla CSS afecta a qué parte.
+    - Mobile first: clases sin prefijo = móvil; md: (48rem) y lg: (56rem).
+    - Clases de utilidad de Tailwind para casi todo. Los pocos componentes
+      propios (input.css) usan BEM: bloque__elemento--modificador (ej.
+      .btn--inverse, .timeline__item--role).
+    - Algunas clases no dan estilos: son ganchos de js/main.js (card,
+      case, section, steps, to-top…). No las borres.
     - Los ids de las <section> se usan como anclas del menú (#casos…) y
       el JS los usa para resaltar la sección activa. Si cambias un id,
       cambia también el href del menú.
@@ -107,11 +115,14 @@
       } catch (e) {}
     </script>
 
+    <!-- style.css = Tailwind COMPILADO desde estilos/input.css (no se edita a mano) -->
     <link rel="stylesheet" href="estilos/style.css" />
     <!-- defer: descarga en paralelo y se ejecuta cuando el HTML ya está leído -->
     <script src="js/main.js" defer></script>
   </head>
-  <body>
+  <!-- "waves waves--page": ondas de voz de fondo, fijas detrás de toda la
+       página (componente en estilos/input.css) -->
+  <body class="waves waves--page">
     <!--
       Enlace de accesibilidad: invisible salvo al navegar con teclado (Tab).
       Permite saltarse el menú e ir directo al contenido. Apunta a <main id="contenido">.
@@ -119,25 +130,39 @@
     <a class="skip-link" href="#contenido">Saltar al contenido</a>
 
     <!-- ============ HEADER ============
-         Cabecera fija (position: sticky) que se queda arriba al hacer scroll.
+         Cabecera fija (sticky top-0) que se queda arriba al hacer scroll.
+         Fondo semitransparente (bg-bg/85) + desenfoque (backdrop-blur) = efecto
+         "cristal esmerilado". z-50: por encima de todo salvo el skip-link (100).
+         flex-wrap: sin JS, los enlaces bajan de línea si no caben.
          En móvil los enlaces se pliegan tras el botón "Menú" (lo gestiona main.js).
-         Los botones "Menú" y ☾ están ocultos por CSS hasta que carga el JS. -->
-    <header class="site-header">
-      <a href="#inicio" class="logo">Héctor Martín</a>
+         Las clases con js: solo se aplican cuando hay JS (clase "js" en <html>):
+         sin JS los botones "Menú" y ☾ están ocultos y el menú siempre visible. -->
+    <header
+      class="sticky top-0 z-50 flex min-h-[4.25rem] flex-wrap items-center gap-x-4 gap-y-2 border-b border-line bg-bg/85 px-(--pad-x) backdrop-blur-[10px]"
+    >
+      <!-- mr-auto empuja el resto de elementos del header a la derecha -->
+      <a href="#inicio" class="mr-auto font-serif text-[1.25rem] text-text no-underline"
+        >Héctor Martín</a
+      >
 
+      <!-- La clase "nav" no da estilos: la usa main.js para cerrar el menú al
+           hacer clic fuera. -->
       <nav class="nav" aria-label="Principal">
         <!--
-          OJO: este botón debe ir JUSTO antes de <ul id="menu">. El CSS abre el
-          menú con el selector "botón + lista" (hermano inmediato).
+          OJO: este botón debe ir ANTES de <ul id="menu"> y dentro del mismo <nav>.
+          Lleva la clase "peer" de Tailwind, y la lista se abre con
+          "peer-aria-expanded:flex" (= cuando el botón tiene aria-expanded="true").
           aria-expanded guarda el estado abierto/cerrado (lo cambia main.js).
           aria-controls indica a los lectores de pantalla qué elemento controla.
           aria-label repite el texto visible: algunas auditorías (p. ej. la de
           Safari, "testButtonLabels") solo dan por bueno un botón si tiene este
           atributo. Debe coincidir SIEMPRE con el texto visible (WCAG 2.5.3);
           main.js actualiza los dos a la vez ("Menú" / "Cerrar").
+          "menu-toggle" no da estilos: es el gancho de main.js.
+          Solo con JS y solo en móvil (js:inline-flex md:js:hidden).
         -->
         <button
-          class="menu-toggle"
+          class="menu-toggle peer hidden h-10 cursor-pointer items-center rounded border border-line bg-transparent px-[0.9rem] py-0 font-sans text-[0.95rem] leading-[inherit] text-text js:inline-flex md:js:hidden"
           type="button"
           aria-label="Menú"
           aria-expanded="false"
@@ -145,22 +170,49 @@
         >
           Menú
         </button>
-        <!-- Cada href debe coincidir con el id de una <section> de <main> -->
-        <ul id="menu" class="nav__list">
-          <li><a href="#que-hago">Qué hago</a></li>
-          <li><a href="#casos">Casos</a></li>
-          <li><a href="#trayectoria">Trayectoria</a></li>
+        <!-- Cada href debe coincidir con el id de una <section> de <main>.
+             Sin JS: lista en línea. Con JS en móvil (js:…): desplegable bajo el
+             header, oculto hasta que se pulsa "Menú". En escritorio (md:js:…)
+             se deshace el desplegable y vuelve a estar en línea.
+             aria-[current=true]: sección activa, la marca main.js. -->
+        <ul
+          id="menu"
+          class="nav__list m-0 flex list-none gap-8 p-0 js:absolute js:inset-x-0 js:top-full js:hidden js:flex-col js:gap-0 js:border-b js:border-line js:bg-bg js:px-(--pad-x) js:pt-2 js:pb-6 js:peer-aria-expanded:flex md:js:static md:js:flex md:js:flex-row md:js:gap-8 md:js:border-b-0 md:js:bg-transparent md:js:p-0"
+        >
+          <!-- js:py-[0.85rem] en móvil: zonas táctiles de 44px o más -->
+          <li>
+            <a
+              href="#que-hago"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Qué hago</a
+            >
+          </li>
+          <li>
+            <a
+              href="#casos"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Casos</a
+            >
+          </li>
+          <li>
+            <a
+              href="#trayectoria"
+              class="text-[0.95rem] text-text no-underline hover:text-accent-text aria-[current=true]:text-accent-text js:block js:py-[0.85rem] md:js:inline md:js:py-0"
+              >Trayectoria</a
+            >
+          </li>
         </ul>
       </nav>
 
-      <!-- CTA del header: en móvil se oculta por CSS (allí el CTA está en el hero) -->
-      <a href="#contacto" class="btn btn--small">Escríbeme</a>
+      <!-- CTA del header: oculto en móvil (allí el CTA está en el hero) -->
+      <a href="#contacto" class="btn btn--small hidden md:inline-block">Escríbeme</a>
       <!--
         Botón de tema claro/oscuro. El icono y el aria-label iniciales son los del
         modo claro; main.js los actualiza al cargar y en cada clic.
+        "theme-toggle" no da estilos: es el gancho de main.js. Solo con JS.
       -->
       <button
-        class="theme-toggle"
+        class="theme-toggle hidden h-10 w-10 cursor-pointer place-items-center rounded border border-line bg-transparent p-0 font-sans text-[0.95rem] leading-[inherit] text-text js:inline-grid"
         type="button"
         aria-label="Cambiar a modo oscuro"
       >
@@ -174,20 +226,35 @@
            Primer pantallazo: quién es, qué hace y dos llamadas a la acción.
            Solo debe haber UN <h1> en toda la página (está aquí); el resto de
            títulos son h2/h3. Importante para SEO y lectores de pantalla.
-           En móvil la foto sube arriba; en escritorio va a la derecha (lo hace el CSS). -->
-      <section id="inicio" class="hero">
-        <div class="hero__text">
-          <p class="eyebrow">CX &amp; AI Solutions Architect · Valladolid</p>
-          <h1>Del reto de negocio a la solución en producción.</h1>
-          <p class="lead">
+           Móvil: una columna, con la foto arriba (-order-1) y pequeña.
+           Escritorio (lg:, ≥ 56rem): texto | foto, el texto algo más ancho (1.3fr 1fr). -->
+      <section
+        id="inicio"
+        class="grid gap-8 px-(--pad-x) py-[clamp(3rem,8vw,7rem)] lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-16"
+      >
+        <div>
+          <!-- "Eyebrow": la línea pequeña en mayúsculas encima del título -->
+          <p
+            class="mt-0 mb-5 text-[0.8rem] font-semibold tracking-[0.12em] text-accent-text uppercase"
+          >
+            CX &amp; AI Solutions Architect · Valladolid
+          </p>
+          <h1 class="mt-0 mb-6 max-w-[16ch]">
+            Del reto de negocio a la solución en producción.
+          </h1>
+          <!-- Párrafo de entrada, algo más grande que el texto normal -->
+          <p class="mt-0 mb-10 text-[1.2em] text-text-muted">
             Diseño experiencias de cliente donde personas e IA trabajan juntas:
             Contact Center e IA conversacional que escalan sin perder lo humano.
           </p>
-          <div class="hero__actions">
+          <div class="flex flex-wrap items-center gap-7">
             <a href="#casos" class="btn">Ver casos</a>
             <!-- "download" fuerza la descarga del PDF en vez de abrirlo.
                  aria-hidden en la flecha: es decorativa, que no la lea el lector de pantalla. -->
-            <a href="imagenes/CV-Hector-Martin.pdf" class="link-arrow" download
+            <a
+              href="imagenes/CV-Hector-Martin.pdf"
+              class="font-semibold no-underline hover:underline"
+              download
               >Descargar CV <span aria-hidden="true">↓</span></a
             >
           </div>
@@ -200,9 +267,10 @@
           fetchpriority="high": es la imagen principal de la primera pantalla,
           así el navegador la descarga antes que otros recursos menos urgentes.
           No le pongas loading="lazy" (retrasaría justo lo primero que se ve).
+          En el HTML va después del texto; -order-1 la sube visualmente en móvil.
         -->
         <img
-          class="hero__photo"
+          class="-order-1 w-44 lg:order-none lg:w-full lg:max-w-104 lg:justify-self-end"
           src="imagenes/hector-martin.webp"
           fetchpriority="high"
           alt="Héctor Martín, sonriendo con los brazos cruzados"
@@ -216,61 +284,83 @@
            Como no tiene título visible, aria-label le da nombre para lectores de pantalla.
            Se usa una lista de definiciones (<dl>): <dt> = dato destacado,
            <dd> = explicación. El <div> que agrupa cada par es HTML válido y
-           permite maquetarlos como columnas. Para añadir un dato, copia un <div> entero. -->
-      <section class="credibility" aria-label="Experiencia y plataformas">
-        <dl class="credibility__list">
+           permite maquetarlos como columnas. Para añadir un dato, copia un <div> entero.
+           Fondo semitransparente (bg-bg-alt/80) para que se intuyan las ondas
+           de fondo; si le pones un fondo opaco, las tapa.
+           Rejilla "auto-ajustable" (repeat(auto-fit, minmax(13rem, 1fr))): mete
+           tantas columnas como quepan, de 13rem como mínimo. 4 en escritorio,
+           2 en tablet, 1 en móvil, sin md:/lg:. El mismo patrón se usa en
+           "Qué hago" y "Cómo trabajo".
+           "credibility__list" no da estilos: la usa main.js (animación). -->
+      <section
+        class="border-y border-line bg-bg-alt/80 px-(--pad-x) py-10"
+        aria-label="Experiencia y plataformas"
+      >
+        <dl
+          class="credibility__list m-0 grid grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-10 gap-y-7"
+        >
           <div>
-            <dt>12+ años</dt>
-            <dd>en Contact Center</dd>
+            <dt class="font-serif text-[1.5rem]">12+ años</dt>
+            <dd class="mx-0 mt-1 mb-0 text-[0.9rem] text-text-muted">en Contact Center</dd>
           </div>
           <div>
-            <dt>Plataformas</dt>
-            <dd>Genesys Cloud CX · NICE CXone · ICR Evolution</dd>
+            <dt class="font-serif text-[1.5rem]">Plataformas</dt>
+            <dd class="mx-0 mt-1 mb-0 text-[0.9rem] text-text-muted">
+              Genesys Cloud CX · NICE CXone · ICR Evolution
+            </dd>
           </div>
           <div>
-            <dt>Certificado</dt>
-            <dd>Genesys · NICE · Cognigy</dd>
+            <dt class="font-serif text-[1.5rem]">Certificado</dt>
+            <dd class="mx-0 mt-1 mb-0 text-[0.9rem] text-text-muted">Genesys · NICE · Cognigy</dd>
           </div>
           <div>
-            <dt>Todo el ciclo</dt>
-            <dd>Preventa · Proyecto · Implantación · Soporte 24x7</dd>
+            <dt class="font-serif text-[1.5rem]">Todo el ciclo</dt>
+            <dd class="mx-0 mt-1 mb-0 text-[0.9rem] text-text-muted">
+              Preventa · Proyecto · Implantación · Soporte 24x7
+            </dd>
           </div>
         </dl>
       </section>
 
       <!-- ============ 3. QUÉ HAGO ============
-           Patrón común a todas las secciones con class="section":
-           un <h2> con su número (.section__num) delante. Los números
+           Patrón común a todas las secciones con class="section" (la clase no
+           da estilos: la usa main.js para animar los h2):
+           un <h2> (mt-0 mb-12 max-w-[22ch]) con su número delante. Los números
            (01, 02, 03, 04) se escriben a mano: si añades o reordenas
            secciones, renuméralos. Llevan aria-hidden para que el lector de
            pantalla lea solo el título ("Estrategia…", no "01 Estrategia…").
-           Tarjetas: cada <article class="card"> es una capacidad. La rejilla se
-           adapta sola al número de tarjetas (no hace falta tocar el CSS). -->
-      <section id="que-hago" class="section">
-        <h2>
-          <span class="section__num" aria-hidden="true">01</span> Estrategia,
-          arquitectura e ingeniería en un mismo perfil
+           Tarjetas: cada <article class="card"> es una capacidad ("card" no da
+           estilos: la usa main.js). La rejilla se adapta sola al número de
+           tarjetas. Para añadir una, copia un <article> entero. -->
+      <section id="que-hago" class="section px-(--pad-x) py-(--space-section)">
+        <h2 class="mt-0 mb-12 max-w-[22ch]">
+          <span class="mb-3 block text-[1.1rem] text-accent-text italic" aria-hidden="true"
+            >01</span
+          >
+          Estrategia, arquitectura e ingeniería en un mismo perfil
         </h2>
 
-        <div class="cards">
-          <article class="card">
-            <h3>CX &amp; Contact Center Architecture</h3>
-            <p>
+        <div class="grid grid-cols-[repeat(auto-fit,minmax(15rem,1fr))] gap-x-8 gap-y-10">
+          <article class="card border-t border-text pt-5">
+            <h3 class="mt-0 mb-3 text-[1.3rem]">CX &amp; Contact Center Architecture</h3>
+            <p class="m-0 text-text-muted">
               Arquitecturas omnicanal y CCaaS: enrutamiento, IVR y canales
               digitales.
             </p>
           </article>
-          <article class="card">
-            <h3>IA conversacional y agéntica</h3>
-            <p>Agentes virtuales, voicebots, chatbots y Agent Copilot.</p>
+          <article class="card border-t border-text pt-5">
+            <h3 class="mt-0 mb-3 text-[1.3rem]">IA conversacional y agéntica</h3>
+            <p class="m-0 text-text-muted">
+              Agentes virtuales, voicebots, chatbots y Agent Copilot.
+            </p>
           </article>
-          <article class="card">
-            <h3>Integración e ingeniería de soluciones</h3>
-            <p>Integración con CRM y ERP, APIs REST, CTI y SIP.</p>
+          <article class="card border-t border-text pt-5">
+            <h3 class="mt-0 mb-3 text-[1.3rem]">Integración e ingeniería de soluciones</h3>
+            <p class="m-0 text-text-muted">Integración con CRM y ERP, APIs REST, CTI y SIP.</p>
           </article>
-          <article class="card">
-            <h3>Consultoría y diseño de soluciones</h3>
-            <p>
+          <article class="card border-t border-text pt-5">
+            <h3 class="mt-0 mb-3 text-[1.3rem]">Consultoría y diseño de soluciones</h3>
+            <p class="m-0 text-text-muted">
               Requisitos, pruebas de concepto, demos, RFP/RFI y estimaciones.
             </p>
           </article>
@@ -278,35 +368,54 @@
       </section>
 
       <!-- ============ 4. CASOS ============
-           Cada caso es un <article class="case"> con dos columnas:
+           Cada caso es un <article class="case"> con dos columnas (lg:, ≥ 56rem;
+           en móvil, una sola):
              .case__body  → texto: número, estado, etiquetas, título, descripción, resultado
              .case__aside → esquema del flujo + detalle técnico desplegable
+           ("case" la usa main.js; case__body / case__aside no dan estilos, solo
+           ayudan a orientarse).
            PARA AÑADIR UN CASO: copia un <article class="case"> completo y cambia
-           los textos. Alterna "case" y "case case--reverse" para mantener el zigzag
-           (una vez texto a la izquierda, otra a la derecha).
-           Estado: usa "status status--prod" (Producción) o "status status--poc" (PoC).
+           los textos. Zigzag: en los casos pares, el .case__body lleva
+           lg:order-2 (el texto pasa a la derecha solo visualmente; en el HTML
+           sigue primero, así los lectores de pantalla leen siempre igual).
+           Estado: copia la etiqueta de "Producción" (text-prod, ●) o la de
+           "PoC" (text-poc, ○). Color + símbolo + texto: no depende solo del
+           color, así lo distinguen también personas con daltonismo.
            IMPORTANTE (confidencialidad): los casos son reales pero SIN nombres de
            clientes, y los esquemas son conceptuales. Mantén ese criterio. -->
-      <section id="casos" class="section">
-        <h2>
-          <span class="section__num" aria-hidden="true">02</span> Tres
-          proyectos, tres dimensiones del perfil
+      <section id="casos" class="section px-(--pad-x) py-(--space-section)">
+        <h2 class="mt-0 mb-12 max-w-[22ch]">
+          <span class="mb-3 block text-[1.1rem] text-accent-text italic" aria-hidden="true"
+            >02</span
+          >
+          Tres proyectos, tres dimensiones del perfil
         </h2>
-        <p class="section__intro">
+        <!-- -mt-6: "pega" la intro al h2, cuyo mb-12 está pensado para cuando
+             no hay intro. "section__intro" la usa main.js. -->
+        <p class="section__intro -mt-6 mb-12 text-text-muted">
           Proyectos reales, sin nombres de clientes. Cada uno indica si está en
           producción o fue una prueba de concepto.
         </p>
 
         <!-- Caso 01 -->
-        <article class="case">
+        <article
+          class="case grid gap-10 border-t border-line py-14 lg:grid-cols-2 lg:items-start lg:gap-16"
+        >
           <div class="case__body">
-            <p class="case__meta">
-              <span class="case__num">Caso 01</span>
-              <span class="status status--prod">Producción</span>
+            <p class="mt-0 mb-4 flex items-center gap-4">
+              <span class="font-serif text-accent-text italic">Caso 01</span>
+              <span
+                class="rounded-full border border-current px-3 py-[0.2rem] text-[0.75rem] font-semibold tracking-[0.08em] text-prod uppercase before:content-['●_']"
+                >Producción</span
+              >
             </p>
-            <p class="case__tags">CX Architecture · Consultoría</p>
-            <h3>Adaptación a la Ley SAC</h3>
-            <p>
+            <p class="mt-0 mb-2 text-[0.8rem] tracking-[0.1em] text-text-muted uppercase">
+              CX Architecture · Consultoría
+            </p>
+            <h3 class="mt-0 mb-4 text-[length:clamp(1.6rem,1.3rem+1.2vw,2.1rem)]">
+              Adaptación a la Ley SAC
+            </h3>
+            <p class="my-4">
               Adaptar la plataforma a la Ley SAC (Ley 10/2025, de servicios de
               atención a la clientela), que exige un canal de atención gratuito,
               accesible para todas las personas y evaluable, con 12 meses de
@@ -314,50 +423,70 @@
             </p>
             <!-- Resultado: el <strong> es la cifra grande. Mantenla corta
                  (un número o 2-3 palabras); el resto del texto la explica. -->
-            <p class="case__result">
-              <span class="case__label">Resultado</span>
-              <strong>100%</strong> preparados para la Ley SAC en tres
-              plataformas: Genesys, NICE e ICR.
+            <p class="mt-8 mb-0 border-l-3 border-accent bg-bg-alt px-6 py-5">
+              <span class="block text-[0.75rem] tracking-[0.1em] text-accent-text uppercase"
+                >Resultado</span
+              >
+              <strong
+                class="my-1 block font-serif text-[2.25rem] leading-[1.1] font-normal text-accent-text"
+                >100%</strong
+              >
+              preparados para la Ley SAC en tres plataformas: Genesys, NICE e ICR.
             </p>
           </div>
 
-          <div class="case__aside">
+          <!-- @container: el flujo de dentro decide su forma según el ancho de
+               ESTA columna, no el de la pantalla (ver .flow en input.css). -->
+          <div class="case__aside @container">
             <!--
               Diagrama de flujo hecho solo con HTML + CSS (sin imágenes):
-              cada <li> es una caja y el CSS dibuja las flechas entre ellas.
-              Si hay espacio va en horizontal (→); si no, en vertical (↓).
-              Para cambiar el flujo, añade o quita <li>. Más de 4-5 pasos
-              no caben bien en horizontal.
+              cada <li> es una caja y el componente .flow (input.css) dibuja
+              las flechas entre ellas. Si hay espacio va en horizontal (→);
+              si no, en vertical (↓). Para cambiar el flujo, añade o quita
+              <li>. Más de 4-5 pasos no caben bien en horizontal.
             -->
-            <figure class="flow">
+            <figure class="flow m-0 rounded border border-line bg-surface p-6">
               <ol>
                 <li>Cliente</li>
                 <li>Flujos de atención optimizados</li>
                 <li>Agentes virtuales</li>
                 <li>Agente con traducción simultánea</li>
               </ol>
-              <figcaption>
+              <figcaption class="mt-4 text-[0.72rem] tracking-[0.1em] text-text-muted uppercase">
                 Esquema conceptual · no es el diagrama del cliente
               </figcaption>
             </figure>
 
             <!--
               <details>/<summary>: desplegable nativo del navegador. Funciona sin JS
-              y es accesible con teclado. El "+"/"−" lo pinta el CSS.
+              y es accesible con teclado. "group" en <details> + "group-open:" en
+              <summary> cambian el "+" por "−" al abrirlo. Se oculta el
+              triángulo nativo (list-none y, para Safari, el pseudo-elemento
+              -webkit-details-marker).
             -->
-            <details>
-              <summary>Ver detalle técnico</summary>
-              <h4>Tecnologías</h4>
-              <!-- class="tags": se muestran como "chips" en línea -->
-              <ul class="tags">
+            <details class="group mt-6 border-b border-line">
+              <summary
+                class="flex cursor-pointer list-none justify-between py-4 font-semibold text-accent-text after:text-[1.25rem] after:leading-none after:content-['+'] group-open:after:content-['−'] [&::-webkit-details-marker]:hidden"
+              >
+                Ver detalle técnico
+              </summary>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Tecnologías
+              </h4>
+              <!-- Chips en línea: las clases *: se aplican a cada <li> hijo -->
+              <ul
+                class="m-0 flex list-none flex-wrap gap-2 p-0 *:rounded *:border *:border-line *:px-3 *:py-1 *:text-[0.85rem]"
+              >
                 <li>Genesys Cloud CX</li>
                 <li>NICE CXone</li>
                 <li>ICR Evolution</li>
                 <li>Agentes virtuales</li>
                 <li>Traducción simultánea</li>
               </ul>
-              <h4>Decisiones técnicas</h4>
-              <ul>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Decisiones técnicas
+              </h4>
+              <ul class="mt-0 mb-6 list-disc pl-5 text-text-muted">
                 <li>
                   Traducción simultánea para que la atención sea accesible para
                   todas las personas.
@@ -369,47 +498,69 @@
           </div>
         </article>
 
-        <!-- Caso 02 (columnas invertidas: zigzag)
-             case--reverse solo cambia el orden VISUAL con CSS. En el HTML el texto
-             sigue yendo primero, así los lectores de pantalla leen siempre igual. -->
-        <article class="case case--reverse">
-          <div class="case__body">
-            <p class="case__meta">
-              <span class="case__num">Caso 02</span>
-              <span class="status status--poc">PoC</span>
+        <!-- Caso 02 (zigzag: lg:order-2 en .case__body) -->
+        <article
+          class="case grid gap-10 border-t border-line py-14 lg:grid-cols-2 lg:items-start lg:gap-16"
+        >
+          <div class="case__body lg:order-2">
+            <p class="mt-0 mb-4 flex items-center gap-4">
+              <span class="font-serif text-accent-text italic">Caso 02</span>
+              <span
+                class="rounded-full border border-current px-3 py-[0.2rem] text-[0.75rem] font-semibold tracking-[0.08em] text-poc uppercase before:content-['○_']"
+                >PoC</span
+              >
             </p>
-            <p class="case__tags">Conversational AI · Voice AI</p>
-            <h3>Voicebot de citas</h3>
-            <p>Automatizar la reserva de citas por teléfono.</p>
-            <p class="case__result">
-              <span class="case__label">Resultado</span>
+            <p class="mt-0 mb-2 text-[0.8rem] tracking-[0.1em] text-text-muted uppercase">
+              Conversational AI · Voice AI
+            </p>
+            <h3 class="mt-0 mb-4 text-[length:clamp(1.6rem,1.3rem+1.2vw,2.1rem)]">
+              Voicebot de citas
+            </h3>
+            <p class="my-4">Automatizar la reserva de citas por teléfono.</p>
+            <p class="mt-8 mb-0 border-l-3 border-accent bg-bg-alt px-6 py-5">
+              <span class="block text-[0.75rem] tracking-[0.1em] text-accent-text uppercase"
+                >Resultado</span
+              >
               <!-- &gt; es el símbolo ">" escapado (en HTML ">" y "<" se escriben así en el texto) -->
-              <strong>&gt;60%</strong> de contención en la PoC: las citas se
-              resuelven con autogestión.
+              <strong
+                class="my-1 block font-serif text-[2.25rem] leading-[1.1] font-normal text-accent-text"
+                >&gt;60%</strong
+              >
+              de contención en la PoC: las citas se resuelven con autogestión.
             </p>
           </div>
 
-          <div class="case__aside">
-            <figure class="flow">
+          <div class="case__aside @container">
+            <figure class="flow m-0 rounded border border-line bg-surface p-6">
               <ol>
                 <li>Llamada entrante</li>
                 <li>Agente de voz con IA</li>
                 <li>Cita reservada</li>
               </ol>
-              <figcaption>
+              <figcaption class="mt-4 text-[0.72rem] tracking-[0.1em] text-text-muted uppercase">
                 Esquema conceptual · no es el diagrama del cliente
               </figcaption>
             </figure>
 
-            <details>
-              <summary>Ver detalle técnico</summary>
-              <h4>Tecnologías</h4>
-              <ul class="tags">
+            <details class="group mt-6 border-b border-line">
+              <summary
+                class="flex cursor-pointer list-none justify-between py-4 font-semibold text-accent-text after:text-[1.25rem] after:leading-none after:content-['+'] group-open:after:content-['−'] [&::-webkit-details-marker]:hidden"
+              >
+                Ver detalle técnico
+              </summary>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Tecnologías
+              </h4>
+              <ul
+                class="m-0 flex list-none flex-wrap gap-2 p-0 *:rounded *:border *:border-line *:px-3 *:py-1 *:text-[0.85rem]"
+              >
                 <li>Genesys Agentic Virtual Agents</li>
                 <li>IA de voz</li>
               </ul>
-              <h4>Decisiones técnicas</h4>
-              <ul>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Decisiones técnicas
+              </h4>
+              <ul class="mt-0 mb-6 list-disc pl-5 text-text-muted">
                 <li>
                   Construir el mismo agente de voz en varias plataformas de IA
                   de voz y compararlas.
@@ -420,47 +571,72 @@
         </article>
 
         <!-- Caso 03 -->
-        <article class="case">
+        <article
+          class="case grid gap-10 border-t border-line py-14 lg:grid-cols-2 lg:items-start lg:gap-16"
+        >
           <div class="case__body">
-            <p class="case__meta">
-              <span class="case__num">Caso 03</span>
-              <span class="status status--prod">Producción</span>
+            <p class="mt-0 mb-4 flex items-center gap-4">
+              <span class="font-serif text-accent-text italic">Caso 03</span>
+              <span
+                class="rounded-full border border-current px-3 py-[0.2rem] text-[0.75rem] font-semibold tracking-[0.08em] text-prod uppercase before:content-['●_']"
+                >Producción</span
+              >
             </p>
-            <p class="case__tags">Solution Engineering · Integraciones</p>
-            <h3>Outbound de recobro con IA de voz</h3>
-            <p>
+            <p class="mt-0 mb-2 text-[0.8rem] tracking-[0.1em] text-text-muted uppercase">
+              Solution Engineering · Integraciones
+            </p>
+            <h3 class="mt-0 mb-4 text-[length:clamp(1.6rem,1.3rem+1.2vw,2.1rem)]">
+              Outbound de recobro con IA de voz
+            </h3>
+            <p class="my-4">
               Escalar una campaña outbound de recobro y aprovechar sus datos.
             </p>
-            <p class="case__result">
-              <span class="case__label">Resultado</span>
-              <strong>Más recobro</strong> por cada llamada que llega al agente.
+            <p class="mt-8 mb-0 border-l-3 border-accent bg-bg-alt px-6 py-5">
+              <span class="block text-[0.75rem] tracking-[0.1em] text-accent-text uppercase"
+                >Resultado</span
+              >
+              <strong
+                class="my-1 block font-serif text-[2.25rem] leading-[1.1] font-normal text-accent-text"
+                >Más recobro</strong
+              >
+              por cada llamada que llega al agente.
             </p>
           </div>
 
-          <div class="case__aside">
-            <figure class="flow">
+          <div class="case__aside @container">
+            <figure class="flow m-0 rounded border border-line bg-surface p-6">
               <ol>
                 <li>Campaña outbound</li>
                 <li>Synthflow AI</li>
                 <li>Clasificación automática</li>
                 <li>Agente</li>
               </ol>
-              <figcaption>
+              <figcaption class="mt-4 text-[0.72rem] tracking-[0.1em] text-text-muted uppercase">
                 Esquema conceptual · no es el diagrama del cliente
               </figcaption>
             </figure>
 
-            <details>
-              <summary>Ver detalle técnico</summary>
-              <h4>Tecnologías</h4>
-              <ul class="tags">
+            <details class="group mt-6 border-b border-line">
+              <summary
+                class="flex cursor-pointer list-none justify-between py-4 font-semibold text-accent-text after:text-[1.25rem] after:leading-none after:content-['+'] group-open:after:content-['−'] [&::-webkit-details-marker]:hidden"
+              >
+                Ver detalle técnico
+              </summary>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Tecnologías
+              </h4>
+              <ul
+                class="m-0 flex list-none flex-wrap gap-2 p-0 *:rounded *:border *:border-line *:px-3 *:py-1 *:text-[0.85rem]"
+              >
                 <li>ICR Evolution</li>
                 <li>Synthflow AI</li>
                 <li>SQL</li>
                 <li>Pasarelas de pago</li>
               </ul>
-              <h4>Decisiones técnicas</h4>
-              <ul>
+              <h4 class="mt-5 mb-3 text-[0.75rem] font-bold tracking-[0.1em] text-accent-text uppercase">
+                Decisiones técnicas
+              </h4>
+              <ul class="mt-0 mb-6 list-disc pl-5 text-text-muted">
                 <li>
                   Integración de Synthflow con la campaña outbound para la IA de
                   voz.
@@ -475,54 +651,80 @@
 
       <!-- ============ 5. CÓMO TRABAJO ============
            Tiene id pero NO está en el menú (decisión de diseño: menú corto).
-           Su fondo alterno se define en el CSS por su id (#como-trabajo). -->
-      <section id="como-trabajo" class="section">
-        <h2>
-          <span class="section__num" aria-hidden="true">03</span> Del problema a
-          producción
+           Fondo alterno semitransparente (bg-bg-alt/80) para que se intuyan
+           las ondas de fondo, igual que la franja de credibilidad. -->
+      <section
+        id="como-trabajo"
+        class="section bg-bg-alt/80 px-(--pad-x) py-(--space-section)"
+      >
+        <h2 class="mt-0 mb-12 max-w-[22ch]">
+          <span class="mb-3 block text-[1.1rem] text-accent-text italic" aria-hidden="true"
+            >03</span
+          >
+          Del problema a producción
         </h2>
 
-        <!-- Los números 1, 2, 3, 4 de cada paso los genera el CSS (counter),
-             no están escritos aquí. Si añades un paso, se numera solo. -->
-        <ol class="steps">
+        <!-- Los números 1, 2, 3, 4 de cada paso no están escritos aquí: los
+             genera un contador CSS. [counter-reset:paso] lo pone a 0 en la
+             lista, cada <li> le suma 1 ([counter-increment:paso]) y lo
+             escribe en su ::before (before:content-[counter(paso)]).
+             Si añades un paso, se numera solo. Las clases *: se aplican a
+             cada <li> hijo. "steps" no da estilos: la usa main.js.
+             Misma rejilla auto-ajustable que "Qué hago" (mínimo 13rem). -->
+        <ol
+          class="steps m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(13rem,1fr))] gap-x-8 gap-y-10 p-0 [counter-reset:paso] *:border-t *:border-text *:pt-5 *:[counter-increment:paso] *:before:font-serif *:before:text-[1.1rem] *:before:text-accent-text *:before:italic *:before:content-[counter(paso)]"
+        >
           <li>
-            <h3>Discover</h3>
-            <p>Entender el problema.</p>
+            <h3 class="mt-2 mb-1">Discover</h3>
+            <p class="m-0 text-text-muted">Entender el problema.</p>
           </li>
           <li>
-            <h3>Architect</h3>
-            <p>Diseñar la solución.</p>
+            <h3 class="mt-2 mb-1">Architect</h3>
+            <p class="m-0 text-text-muted">Diseñar la solución.</p>
           </li>
           <li>
-            <h3>Validate</h3>
-            <p>Probar y validar.</p>
+            <h3 class="mt-2 mb-1">Validate</h3>
+            <p class="m-0 text-text-muted">Probar y validar.</p>
           </li>
           <li>
-            <h3>Deliver</h3>
-            <p>Preparar para producción.</p>
+            <h3 class="mt-2 mb-1">Deliver</h3>
+            <p class="m-0 text-text-muted">Preparar para producción.</p>
           </li>
         </ol>
 
-        <!-- Cita "manifiesto". Las comillas grandes las pinta el CSS (::before).
-             El <em> final se resalta en color de acento. -->
-        <blockquote class="quote">
-          <p>
+        <!-- Cita "manifiesto": rejilla de dos columnas (comillas | texto).
+             Las comillas grandes son el ::before (before:content-['“']).
+             El <em> final se resalta en color de acento.
+             "quote" no da estilos: la usa main.js. -->
+        <blockquote
+          class="quote mx-0 mt-20 mb-0 grid grid-cols-[auto_1fr] gap-x-[clamp(1rem,3vw,2.5rem)] border-y border-line py-[clamp(2rem,4vw,3rem)] before:font-serif before:text-[length:clamp(4rem,3rem+4vw,7rem)] before:leading-[0.8] before:text-accent before:content-['“']"
+        >
+          <p
+            class="m-0 max-w-none font-serif text-[length:clamp(1.35rem,1.05rem+1.2vw,2rem)] leading-[1.45] text-balance"
+          >
             Una solución está terminada cuando funciona de forma fiable, se
             integra con lo que ya existe y aporta valor al negocio.
-            <em>No cuando funciona la demo.</em>
+            <em class="text-accent-text">No cuando funciona la demo.</em>
           </p>
         </blockquote>
       </section>
 
-      <!-- ============ 6. TRAYECTORIA ============ -->
-      <section id="trayectoria" class="section">
-        <h2>
-          <span class="section__num" aria-hidden="true">04</span> Más de 12 años
-          en Contact Center
+      <!-- ============ 6. TRAYECTORIA ============
+           La cronología (.timeline) es un componente BEM de estilos/input.css:
+           la línea vertical y los marcadores se colocan con pseudo-elementos
+           y variables, y en utilidades sería ilegible. -->
+      <section id="trayectoria" class="section px-(--pad-x) py-(--space-section)">
+        <h2 class="mt-0 mb-12 max-w-[22ch]">
+          <span class="mb-3 block text-[1.1rem] text-accent-text italic" aria-hidden="true"
+            >04</span
+          >
+          Más de 12 años en Contact Center
         </h2>
 
-        <!-- Leyenda: el círculo y el rombo los dibuja el CSS -->
-        <p class="timeline__legend">
+        <!-- Leyenda: el círculo y el rombo los dibuja el componente .legend
+             (input.css). -mt-6 la "pega" al h2, como la intro de Casos.
+             "timeline__legend" no da estilos: la usa main.js. -->
+        <p class="timeline__legend -mt-6 mb-8 flex gap-6 text-[0.8rem] text-text-muted">
           <span class="legend legend--role">Puesto / formación</span>
           <span class="legend legend--cert">Certificación</span>
         </p>
@@ -656,31 +858,50 @@
         </ol>
 
         <!-- "Ahora mismo": bloque con borde discontinuo (= en construcción).
-             Pensado para actualizarse a menudo. -->
-        <p class="now">
-          <strong>Ahora mismo:</strong> exploro cómo aplicar la IA a mi propio
+             Pensado para actualizarse a menudo. "now" la usa main.js. -->
+        <p class="now mt-12 mb-0 rounded border border-dashed border-line px-6 py-5 text-text-muted">
+          <strong class="text-text">Ahora mismo:</strong> exploro cómo aplicar la IA a mi propio
           trabajo de preventa, operaciones e ingeniería.
         </p>
       </section>
 
       <!-- ============ 7. CONTACTO ============
            Bloque final de color (fondo = color de acento). No usa class="section"
-           porque tiene su propio estilo (.contact).
+           porque tiene su propio estilo. Aquí se invierten los papeles: el
+           texto y los enlaces usan on-accent (blanco en claro), el botón
+           --inverse lleva fondo claro, y el anillo de foco de cada enlace
+           también se invierte (focus-visible:outline-on-accent) para que se
+           vea sobre el fondo de color.
+           "waves waves--contact": eco de las ondas de fondo en blanco (ver
+           input.css). relative + isolate son necesarios para que esas ondas
+           queden detrás del texto pero delante del fondo de color.
+           "contact" no da estilos: la usa main.js (animación de sus hijos).
            No hay formulario ni backend: el contacto es por mailto (abre el
            cliente de correo del visitante).
            EL EMAIL APARECE DOS VECES (botón y enlace de texto): si cambia, cámbialo
            en ambos. En el botón, "?subject=" rellena el asunto; los espacios van
            codificados como %20 (es una URL). -->
-      <section id="contacto" class="contact">
-        <h2>¿Tienes un reto de CX, Contact Center o IA?</h2>
-        <p>Hablemos de arquitectura, integración y tecnología.</p>
+      <section
+        id="contacto"
+        class="contact waves waves--contact relative isolate bg-accent px-(--pad-x) py-(--space-section) text-on-accent"
+      >
+        <h2 class="mt-0 mb-4 max-w-[20ch] text-[length:clamp(2rem,1.4rem+2.6vw,3.25rem)]">
+          ¿Tienes un reto de CX, Contact Center o IA?
+        </h2>
+        <p class="mt-0 mb-10 text-[1.15em]">
+          Hablemos de arquitectura, integración y tecnología.
+        </p>
         <a
-          class="btn btn--inverse"
+          class="btn btn--inverse focus-visible:outline-on-accent"
           href="mailto:hectormargar@gmail.com?subject=Contacto%20desde%20tu%20web"
           >Escríbeme</a
         >
-        <p class="contact__links">
-          <a href="mailto:hectormargar@gmail.com">hectormargar@gmail.com</a>
+        <p class="mt-8 mb-0 flex flex-wrap gap-x-4 gap-y-2 text-[0.95rem]">
+          <a
+            href="mailto:hectormargar@gmail.com"
+            class="text-on-accent focus-visible:outline-on-accent"
+            >hectormargar@gmail.com</a
+          >
           <span aria-hidden="true">·</span>
           <!--
             Enlace externo en pestaña nueva:
@@ -693,13 +914,17 @@
             href="https://www.linkedin.com/in/hectormartingarcia/"
             target="_blank"
             rel="noopener"
+            class="text-on-accent focus-visible:outline-on-accent"
             >LinkedIn <span aria-hidden="true">↗</span
             ><span class="visually-hidden"
               >(se abre en una pestaña nueva)</span
             ></a
           >
           <span aria-hidden="true">·</span>
-          <a href="imagenes/CV-Hector-Martin.pdf" download
+          <a
+            href="imagenes/CV-Hector-Martin.pdf"
+            download
+            class="text-on-accent focus-visible:outline-on-accent"
             >CV <span aria-hidden="true">↓</span></a
           >
         </p>
@@ -707,20 +932,33 @@
     </main>
 
     <!-- ============ BOTÓN VOLVER ARRIBA ============
-         Fijo en la esquina inferior derecha (lo coloca el CSS, "Parte 7").
-         Es un enlace normal a #inicio, así que funciona sin JS. Con JS,
-         main.js lo oculta mientras el hero está a la vista.
-         La flecha es decorativa (aria-hidden); el texto que lee el lector
-         de pantalla es el .visually-hidden. -->
-    <a href="#inicio" class="to-top"
+         Fijo en la esquina inferior derecha. Es un enlace normal a #inicio,
+         así que funciona sin JS. La flecha es decorativa (aria-hidden); el
+         texto que lee el lector de pantalla es el .visually-hidden.
+         - Reutiliza .btn (mismo color y hover) y lo ajusta: cuadrado de
+           2.75rem (size-11 ≈ 44px, tamaño cómodo para el dedo), sin padding.
+         - Separado de los bordes por --gutter, el margen lateral de la página.
+         - ring-2 ring-bg: aro del color de fondo, para que se distinga al
+           pasar por encima de Contacto (que es del MISMO color de acento).
+         - z-40: por encima del contenido, por debajo del header (z-50).
+         - Con JS (js:) está oculto hasta que main.js le añade .to-top--visible,
+           al salir el hero de la pantalla. invisible (visibility: hidden) y no
+           solo opacity-0, para que oculto no se alcance con el tabulador.
+           Sin JS se ve siempre.
+         - Fundido solo si no se pide reducir movimiento (motion-safe:).
+         - print:hidden: en papel no tiene sentido.
+         "to-top" no da estilos: la usa main.js. -->
+    <a
+      href="#inicio"
+      class="to-top btn fixed right-(--gutter) bottom-(--gutter) z-40 grid size-11 place-items-center p-0 text-[1.25rem] font-normal ring-2 ring-bg motion-safe:transition-[opacity,visibility,background-color] motion-safe:duration-300 print:hidden js:not-[.to-top--visible]:invisible js:not-[.to-top--visible]:opacity-0"
       ><span aria-hidden="true">↑</span
       ><span class="visually-hidden">Volver arriba</span></a
     >
 
     <!-- ============ FOOTER ============
          El año está escrito a mano: actualízalo cada año. -->
-    <footer class="site-footer">
-      <p>© 2026 Héctor Martín · CX &amp; AI Solutions Architect</p>
+    <footer class="px-(--pad-x) py-8 text-[0.85rem] text-text-muted">
+      <p class="m-0">© 2026 Héctor Martín · CX &amp; AI Solutions Architect</p>
     </footer>
   </body>
 </html>

@@ -15,11 +15,13 @@ negocio a la solución en producción.
 
 ## Tecnología
 
-Una sola página 100 % estática, sin framework, sin dependencias y sin paso de build:
+Una sola página 100 % estática, sin framework JS, sin npm y sin backend:
 
 - **HTML** semántico con todo el contenido (`index.html`).
-- **CSS** propio, mobile first, con variables para el tema claro y oscuro
-  (`estilos/style.css`).
+- **Tailwind CSS v4**, mobile first: clases de utilidad en el HTML y un tema
+  propio con colores para el modo claro y oscuro (`estilos/input.css`).
+  Se compila en local con el CLI standalone de Tailwind (sin npm ni CDN) y se
+  publica el CSS ya compilado (`estilos/style.css`).
 - **JavaScript vanilla** solo para extras: tema, menú móvil, sección activa,
   animaciones y botón "volver arriba" (`js/main.js`).
 - Fuentes **Inter** y **Fraunces** alojadas en local (sin Google Fonts ni CDNs,
@@ -35,8 +37,9 @@ Principios que sigue:
 ## Estructura
 
 ```
-index.html          contenido, SEO y Open Graph
-estilos/style.css   todo el diseño
+index.html          contenido, SEO, Open Graph y clases de Tailwind
+estilos/input.css   entrada de Tailwind: tema, estilos base y componentes
+estilos/style.css   CSS compilado por Tailwind (no se edita a mano)
 js/main.js          comportamiento opcional
 fuentes/            tipografías (.woff2) y sus licencias OFL
 imagenes/           foto, imagen para redes, favicon, fondo y CV en PDF
@@ -45,17 +48,25 @@ imagenes/           foto, imagen para redes, favicon, fondo y CV en PDF
 Cada fichero empieza con unas **notas de traspaso** que explican cómo está
 organizado y qué tener en cuenta antes de editarlo.
 
-## Ver en local
+## Compilar y ver en local
+
+Descarga el [CLI standalone de Tailwind v4](https://github.com/tailwindlabs/tailwindcss/releases)
+para tu sistema, renómbralo a `tailwindcss` en la raíz del proyecto (no se sube
+al repo) y:
 
 ```bash
+./tailwindcss -i estilos/input.css -o estilos/style.css --watch   # desarrollo
+./tailwindcss -i estilos/input.css -o estilos/style.css --minify  # para publicar
 python3 -m http.server
 ```
 
-Y abre http://localhost:8000 (o directamente `index.html` en el navegador).
+Y abre http://localhost:8000.
 
 ## Publicación
 
 Se publica con **GitHub Pages** desde la rama `main`: cada push actualiza la web.
+GitHub Pages no compila: sube `estilos/style.css` compilado (`--minify`) en el
+mismo commit que los cambios de HTML o `input.css`.
 
 ## Licencias
 

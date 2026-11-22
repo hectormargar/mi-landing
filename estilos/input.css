@@ -1,0 +1,617 @@
+/* =========================================================
+   Héctor Martín · Landing — ENTRADA DE TAILWIND
+   ---------------------------------------------------------
+   NOTAS DE TRASPASO
+
+   Este archivo NO lo lee el navegador. Es la entrada de Tailwind v4:
+   el CLI lo compila, junto con las clases que encuentra en index.html y
+   js/main.js, y genera estilos/style.css (que es lo que se publica).
+
+     Compilar:      ./tailwindcss -i estilos/input.css -o estilos/style.css --minify
+     Desarrollo:    ./tailwindcss -i estilos/input.css -o estilos/style.css --watch
+
+   Nunca edites estilos/style.css a mano: se sobrescribe al compilar.
+   GitHub Pages no compila: sube style.css compilado en el mismo commit.
+
+   Dónde va cada cosa:
+     - Casi todo el diseño son clases de utilidad en index.html.
+     - Aquí solo: tema (colores, fuentes, puntos de corte), estilos base
+       de etiquetas y los pocos componentes BEM que con utilidades
+       quedarían ilegibles (pseudo-elementos, contadores, máscaras…).
+   Preflight (el reset de Tailwind) está ACTIVO: quita márgenes, viñetas
+   y estilos por defecto del navegador. Por eso cada elemento lleva sus
+   márgenes explícitos en el HTML (mt-0 mb-4…) y las listas con viñetas
+   necesitan list-disc.
+
+   Orden de este archivo:
+     1. Importación de Tailwind (capas)
+     2. Fuentes locales
+     3. Tema: colores, tipografías y puntos de corte
+     4. Variantes propias: dark (data-theme) y js
+     5. Estilos base (etiquetas HTML)
+     6. Componentes propios (BEM)
+   ========================================================= */
+
+/* ========== 1. TAILWIND ==========
+   Importación por partes (equivale a @import "tailwindcss") para poder
+   usar source(none) + @source: Tailwind solo busca clases en estos dos
+   archivos (si no, leería también CLAUDE.md, README…). */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@source "../index.html";
+@source "../js/main.js";
+
+/* ========== 2. FUENTES (locales) ==========
+   Desde /fuentes y no desde Google Fonts: sin peticiones a terceros (RGPD).
+   Fuentes "variables": un archivo cubre todos los grosores (100-900).
+   font-display: swap → se ve el texto con la fuente de respaldo mientras
+   carga. Solo caracteres latinos. */
+@font-face {
+  font-family: "Inter";
+  src: url("../fuentes/inter-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fuentes/fraunces-latin-wght-normal.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Fraunces";
+  src: url("../fuentes/fraunces-latin-wght-italic.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ========== 3. TEMA ==========
+   Los colores reales viven en variables CSS (--bg, --accent…) con un
+   valor para claro (:root) y otro para oscuro (:root[data-theme="dark"]),
+   en la sección 5. @theme las convierte en clases de Tailwind:
+     --color-accent → bg-accent, text-accent, border-accent…
+   "inline" hace que la clase use var(--accent) directamente, así que al
+   cambiar de tema cambian solas (no hace falta escribir dark:… en cada
+   color).
+   --color-*: initial BORRA la paleta por defecto de Tailwind: solo
+   existen nuestros colores, y bg-red-500 o similares no funcionan. Es a
+   propósito (regla "nunca colores a mano" de CLAUDE.md).
+   Un color nuevo: variable en los DOS bloques de la sección 5 + línea aquí. */
+@theme inline {
+  --color-*: initial;
+  --color-bg: var(--bg);
+  --color-bg-alt: var(--bg-alt);
+  --color-surface: var(--surface);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+  --color-accent-text: var(--accent-text);
+  --color-on-accent: var(--on-accent);
+  --color-prod: var(--prod);
+  --color-poc: var(--poc);
+}
+
+/* Tipografías (font-serif / font-sans) y puntos de corte.
+   md = 48rem (≈768px): menú desplegado, cronología en dos columnas.
+   lg = 56rem (≈896px): hero y casos en dos columnas (el lg por defecto
+   de Tailwind es 64rem; aquí se redefine). Mobile first: sin prefijo =
+   móvil. No uses max-*: (regla de CLAUDE.md). */
+@theme {
+  --font-*: initial;
+  --font-serif: "Fraunces", Georgia, serif;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --breakpoint-lg: 56rem;
+}
+
+/* ========== 4. VARIANTES PROPIAS ==========
+   dark: → se aplica cuando <html> tiene data-theme="dark" (lo pone el
+     botón ☀/☾). NO sigue prefers-color-scheme: decisión de diseño, la
+     web arranca siempre en claro.
+   js: → se aplica cuando <html> tiene la clase "js" (la pone el script
+     inline del <head>). Para lo que solo tiene sentido con JS (botón
+     Menú, menú plegado…): sin JS, todo se queda visible. */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+@custom-variant js (&:where(.js, .js *));
+
+/* ========== 5. BASE ==========
+   Estilos de etiquetas HTML y variables de color. Van en la capa "base",
+   la más débil: cualquier clase de Tailwind los sobrescribe. */
+@layer base {
+  /* --- Colores: modo claro ---
+     --accent: color de marca (botones, líneas, marcadores).
+     --accent-text: versión más oscura para texto y enlaces, porque
+     --accent puro no llega al contraste mínimo (4.5:1) como texto pequeño.
+     Los colores están revisados en claro y oscuro: si cambias uno,
+     comprueba el contraste (webaim.org/resources/contrastchecker). */
+  :root {
+    --bg: #faf8f4; /* blanco roto */
+    --bg-alt: #f2eee6; /* secciones alternas */
+    --surface: #ffffff; /* tarjetas y flujos */
+    --text: #1a1a1a;
+    --text-muted: #5c5853;
+    --line: #e2ddd3; /* separadores de 1px */
+    --accent: #30778d; /* azul petróleo del aro de la foto */
+    --accent-text: #245e70; /* enlaces en texto corrido */
+    --on-accent: #ffffff; /* texto sobre botón */
+    --prod: #2f6b4f; /* estado Producción */
+    --poc: #8a5a12; /* estado PoC */
+    color-scheme: light; /* controles nativos (scroll, formularios) en claro */
+  }
+
+  /* --- Colores: modo oscuro (solo si se elige con ☀/☾) --- */
+  :root[data-theme="dark"] {
+    --bg: #141615;
+    --bg-alt: #1c1f1e;
+    --surface: #202423;
+    --text: #ece8e1;
+    --text-muted: #a39e96;
+    --line: #2e3331;
+    --accent: #6fb3c8;
+    --accent-text: #6fb3c8;
+    --on-accent: #0f1a1e;
+    --prod: #7cc4a0;
+    --poc: #e0b26a;
+    color-scheme: dark;
+  }
+
+  /* --- Layout ---
+     No hay un <div class="container">: cada bloque de primer nivel
+     (header, <section>, footer) ocupa todo el ancho (fondos a sangre) y
+     centra su contenido con un padding lateral calculado, que en el HTML
+     es la clase px-(--pad-x):
+       --pad-x = el mayor de: el margen mínimo (--gutter, para móvil) o la
+                 mitad de lo que sobra cuando la pantalla es más ancha que
+                 --max (para centrar en pantallas grandes).
+     Para hacer la web más ancha o estrecha, cambia solo --max.
+     Las secciones normales usan py-(--space-section) como espacio vertical. */
+  :root {
+    --max: 72rem; /* ancho máximo del contenido */
+    --gutter: clamp(1.25rem, 4vw, 2.5rem); /* margen lateral mínimo */
+    --pad-x: max(var(--gutter), (100% - var(--max)) / 2);
+    --space-section: clamp(4.5rem, 10vw, 7.5rem);
+  }
+
+  html {
+    scroll-behavior: smooth; /* scroll animado al pulsar enlaces #ancla */
+    /* Hueco para el header fijo: al saltar a una sección, su título no
+       queda tapado. Si cambias la altura del header, revisa este valor. */
+    scroll-padding-top: 5rem;
+  }
+  /* Si el usuario pide "reducir movimiento", sin scroll animado */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); /* 16px móvil → 18px escritorio */
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    text-wrap: balance; /* reparte las líneas de los titulares */
+  }
+  h1 {
+    font-size: clamp(2.5rem, 1.6rem + 4vw, 4.5rem);
+  }
+  h2 {
+    font-size: clamp(1.875rem, 1.4rem + 2vw, 2.75rem);
+  }
+  h3 {
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  }
+
+  p {
+    /* 65ch ≈ 65 caracteres por línea: cómodo de leer. Para que un párrafo
+       ocupe todo el ancho, ponle la clase max-w-none. */
+    max-width: 65ch;
+    text-wrap: pretty; /* evita una sola palabra en la última línea */
+  }
+
+  /* Preflight quita el subrayado de los enlaces: se recupera aquí para
+     el texto corrido. Donde no se quiera, clase no-underline. */
+  a {
+    color: var(--accent-text);
+    text-decoration-line: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Anillo de foco al navegar con teclado (no aparece al hacer clic).
+     NUNCA pongas outline: none sin una alternativa visible. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+}
+
+/* ========== 6. COMPONENTES (BEM) ==========
+   Solo para piezas que en clases de utilidad quedarían ilegibles o que
+   necesitan estados (:focus). El resto va con clases en el HTML. */
+@layer components {
+  /* Texto oculto a la vista pero leído por lectores de pantalla.
+     (Equivale a sr-only de Tailwind; se mantiene el nombre porque lo usa
+     el HTML en muchos sitios. No lo cambies por display:none.) */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* "Saltar al contenido": fuera de la pantalla hasta que recibe el foco
+     con el primer Tab; entonces baja a su sitio. */
+  .skip-link {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 100;
+    padding: 0.5rem 1rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    transform: translateY(-200%);
+  }
+  .skip-link:focus {
+    transform: none;
+  }
+
+  /* --- Botones ---
+     .btn es un <a> con aspecto de botón (navega, no ejecuta acciones).
+     Es componente porque se repite en varios sitios con el mismo aspecto.
+     Variantes: .btn--small (header) y .btn--inverse (Contacto).
+     También lo reutiliza el botón "Volver arriba", con utilidades encima.
+     El hover mezcla el acento con un poco del color de texto: lo oscurece
+     en claro y lo aclara en oscuro sin definir un color nuevo. */
+  .btn {
+    display: inline-block;
+    padding: 0.85rem 1.6rem;
+    background: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  .btn:hover {
+    background: color-mix(in srgb, var(--accent) 85%, var(--text));
+  }
+  .btn--small {
+    padding: 0.55rem 1.1rem;
+    font-size: 0.9rem;
+  }
+  /* Sobre el fondo de acento de Contacto: fondo claro y texto de acento.
+     En hover el fondo se tiñe un poco de acento y el texto pasa a
+     --accent-text (más oscuro): con --accent el contraste bajaba de 4.5:1. */
+  .btn--inverse {
+    background: var(--on-accent);
+    color: var(--accent);
+  }
+  .btn--inverse:hover {
+    background: color-mix(in srgb, var(--on-accent) 88%, var(--accent));
+    color: var(--accent-text);
+  }
+
+  /* --- Flujo de los casos (<figure class="flow"> con un <ol> dentro) ---
+     La caja exterior (borde, fondo, padding) va con clases en el HTML;
+     aquí solo los pasos y las flechas, que necesitan pseudo-elementos y
+     una container query.
+     Vertical (↓) por defecto; horizontal (→) si SU columna mide 34rem o
+     más. Es una CONTAINER QUERY y no una media query: mide la columna
+     (.case__aside, que lleva la clase @container en el HTML), no la
+     pantalla, porque la columna puede ser estrecha aunque la pantalla
+     sea ancha.
+     Cada flecha es el ::after de una caja (menos la última), colocada en
+     el hueco entre cajas (gap: 1.75rem). Si cambias ese gap, ajusta
+     también line-height / width de la flecha para que siga centrada. */
+  .flow ol {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .flow li {
+    position: relative;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  .flow li:not(:last-child)::after {
+    content: "↓";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    line-height: 1.75rem;
+    font-weight: 400;
+    color: var(--accent);
+  }
+  @container (min-width: 34rem) {
+    .flow ol {
+      flex-direction: row;
+    }
+    .flow li {
+      flex: 1;
+      display: grid;
+      place-items: center;
+    }
+    .flow li:not(:last-child)::after {
+      content: "→";
+      top: 50%;
+      left: 100%;
+      width: 1.75rem;
+      transform: translateY(-50%);
+      text-align: center;
+    }
+  }
+  /* --- Trayectoria: leyenda (● Puesto · ◇ Certificación) --- */
+  .legend::before {
+    content: "";
+    display: inline-block;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  .legend--role::before {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .legend--cert::before {
+    width: 0.5rem;
+    height: 0.5rem;
+    border: 1.5px solid var(--accent);
+    transform: rotate(45deg);
+  }
+
+  /* --- Trayectoria: cronología con puestos y certificaciones ---
+     Cómo está construida:
+     - La línea vertical es el ::before de la <ol class="timeline">.
+     - Cada marcador (● o ◇) es el ::before de su <li>.
+     - Ambos se colocan con la MISMA variable --marker-x, así la línea pasa
+       siempre por el centro de los marcadores (translateX(-50%) los centra).
+       Si mueves la línea, cambia solo --marker-x.
+     - En escritorio (md), --marker-x se recalcula a partir de la columna
+       de fechas (--date-col): fechas | línea | contenido. La línea queda
+       en medio del hueco entre columnas: --date-col + la mitad del
+       column-gap (3.5rem / 2 = 1.75rem). Si cambias column-gap, actualiza
+       ese 1.75rem.
+     - El "top" de cada marcador = padding superior del ítem + media línea
+       de texto, para que quede a la altura de la fecha. Si cambias el
+       padding-block de --role o --cert, cambia también su top. */
+  .timeline {
+    --marker-x: 0.45rem; /* posición horizontal de la línea (móvil) */
+    position: relative;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .timeline::before {
+    content: "";
+    position: absolute;
+    top: 1.5rem;
+    bottom: 1.5rem;
+    left: var(--marker-x);
+    width: 1px;
+    background: color-mix(in srgb, var(--text) 25%, transparent);
+  }
+
+  .timeline__item {
+    position: relative;
+    display: grid;
+    gap: 0.15rem 0;
+    padding-left: 2.25rem;
+  }
+  .timeline__item--role {
+    padding-block: 1.25rem;
+  }
+  .timeline__item--cert {
+    padding-block: 0.5rem;
+  }
+
+  .timeline__item::before {
+    content: "";
+    position: absolute;
+    left: var(--marker-x);
+  }
+  .timeline__item--role::before {
+    top: calc(1.25rem + 0.45em);
+    width: 0.9rem;
+    height: 0.9rem;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px var(--bg); /* hueco alrededor del punto */
+    transform: translateX(-50%);
+  }
+  .timeline__item--cert::before {
+    top: calc(0.5rem + 0.55em);
+    width: 0.55rem;
+    height: 0.55rem;
+    border: 1.5px solid var(--accent);
+    background: var(--bg);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  .timeline__date {
+    margin: 0;
+  }
+  .timeline__item--role .timeline__date {
+    font-family: var(--font-serif);
+    font-style: italic;
+    color: var(--accent-text);
+  }
+  .timeline__item--cert .timeline__date {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timeline__content h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  .timeline__content p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+  .timeline__item--cert .timeline__content p {
+    font-size: 0.95rem;
+  }
+
+  .timeline__kind {
+    margin-right: 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+  }
+
+  @variant md {
+    .timeline {
+      --date-col: 9rem;
+      --marker-x: calc(var(--date-col) + 1.75rem);
+    }
+    .timeline__item {
+      grid-template-columns: var(--date-col) 1fr;
+      column-gap: 3.5rem;
+      padding-left: 0;
+    }
+    .timeline__date {
+      text-align: right;
+    }
+  }
+
+  /* --- Aparición suave al hacer scroll (la activa main.js) ---
+     main.js pone .reveal (estado inicial: invisible y 1rem más abajo) y
+     luego .is-visible cuando el elemento entra en pantalla. Qué elementos
+     se animan se decide en main.js; aquí, cómo (para hacerlo más rápido o
+     lento, cambia los 0.6s). Solo si no se pide reducir movimiento.
+     OJO: "transition" sustituye entera a la del .btn (no se suman). Por
+     eso se repite background-color: si no, el botón de Contacto (que
+     también recibe .reveal) perdería su transición de hover. */
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      opacity: 0;
+      transform: translateY(1rem);
+      transition:
+        opacity 0.6s ease,
+        transform 0.6s ease,
+        background-color 0.2s;
+    }
+    .reveal.is-visible {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  /* Al imprimir no hay scroll: lo que no llegó a aparecer saldría en
+     blanco. Se fuerza todo a visible. */
+  @media print {
+    .reveal {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* --- Motivo de fondo: ondas de voz ---
+     .waves pinta las ondas en su ::before. Dos variantes:
+       .waves--page    (en <body>): capa fija detrás de toda la página, en la
+                       parte media-baja de la pantalla; el contenido pasa por
+                       encima al hacer scroll.
+       .waves--contact (en Contacto): eco en blanco sobre el bloque de color,
+                       que si no taparía la capa fija. La sección necesita
+                       relative + isolate (en el HTML) para que el z-index:-1
+                       deje las ondas detrás del texto pero delante del fondo.
+     Cómo funciona la máscara: el ::before es un rectángulo de color liso
+     (--wave-color). mask-image deja ver ese color SOLO donde el SVG tiene
+     trazo, y lo intersecta (mask-composite) con un degradado para que las
+     ondas se desvanezcan en los laterales. Las propiedades -webkit- son
+     para Safari: no las quites.
+     Para cambiar el dibujo: sustituye imagenes/ondas.svg (solo importa su
+     forma; su color da igual). Para hacerlas más o menos visibles:
+     --wave-opacity.
+     IMPORTANTE: la capa de página va detrás (z-index: -1), así que una
+     sección con fondo OPACO la tapa. Las de fondo alterno usan
+     bg-bg-alt/80 (semitransparente): si añades otra, usa lo mismo. */
+  .waves::before {
+    content: "";
+    left: 0;
+    right: 0;
+    z-index: -1;
+    pointer-events: none; /* que no bloquee clics sobre el contenido */
+    background: var(--wave-color);
+    opacity: var(--wave-opacity);
+    /* EXCEPCIÓN a "nunca hex a mano": en una máscara solo cuenta la
+       transparencia, no el color, así que #000 = "opaco" y no depende del
+       tema. No lo cambies por una variable. */
+    -webkit-mask-image:
+      url("../imagenes/ondas.svg"),
+      linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+    mask-image:
+      url("../imagenes/ondas.svg"),
+      linear-gradient(to right, transparent, #000 15%, #000 85%, transparent);
+    /* max(100%, 60rem): en móvil el SVG no se encoge por debajo de 60rem,
+       para que las ondas no queden aplastadas (se recortan por los lados) */
+    -webkit-mask-size:
+      max(100%, 60rem) 100%,
+      100% 100%;
+    mask-size:
+      max(100%, 60rem) 100%,
+      100% 100%;
+    -webkit-mask-position: center;
+    mask-position: center;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-composite: source-in;
+    mask-composite: intersect;
+  }
+  .waves--page::before {
+    position: fixed;
+    top: 35vh;
+    height: 50vh;
+    --wave-color: var(--accent);
+    --wave-opacity: 0.11;
+  }
+  .waves--contact::before {
+    position: absolute;
+    top: 50%;
+    height: 70%;
+    transform: translateY(-50%);
+    --wave-color: var(--on-accent);
+    /* 0.05 como máximo: más opacas aclaran el fondo bajo el texto blanco y
+       el contraste baja de 4.5:1 en modo claro. */
+    --wave-opacity: 0.05;
+  }
+}
