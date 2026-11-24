@@ -1,63 +1,63 @@
 <!doctype html>
-<!--
-  =====================================================================
-  LANDING PERSONAL · Héctor Martín
-  NOTAS DE TRASPASO (léelas antes de tocar nada)
-  =====================================================================
-
-  QUÉ ES
-    Una web de una sola página, 100% estática: HTML + Tailwind CSS + JS
-    vanilla. No hay npm, ni framework JS, ni backend.
-    Los estilos son clases de Tailwind en este HTML. Tailwind se compila
-    en local con su CLI standalone (un ejecutable, sin npm):
-      ./tailwindcss -i estilos/input.css -o estilos/style.css --minify
-    Para verla en local: `python3 -m http.server` y abrir
-    http://localhost:8000. Se publica con GitHub Pages (rama main):
-    compila y sube estilos/style.css en el mismo commit que el HTML.
-
-  ESTRUCTURA DE CARPETAS
-    index.html            → este archivo: TODO el contenido (textos) y las
-                            clases de Tailwind (el diseño)
-    estilos/input.css     → entrada de Tailwind: tema (colores, fuentes),
-                            estilos base y componentes BEM
-    estilos/style.css     → CSS COMPILADO por Tailwind: no se edita a mano
-    js/main.js            → extras: tema oscuro, menú móvil, animaciones,
-                            botón "Volver arriba"
-    fuentes/              → tipografías Inter y Fraunces (alojadas en local,
-                            sin Google Fonts). Los .txt OFL son sus licencias:
-                            NO los borres, la licencia obliga a conservarlos.
-    imagenes/             → foto (WebP + copia JPG para redes sociales), CV en
-                            PDF, favicon.svg y el SVG de las ondas de fondo
-
-  CÓMO CAMBIAR COSAS HABITUALES
-    - Textos: se editan directamente aquí, en el HTML.
-    - Colores: variables en estilos/input.css (claro y oscuro) y clases
-      del tema (bg-bg, text-accent…). Nunca colores "a mano" (hex o
-      valores arbitrarios tipo bg-[#123456]).
-    - Actualizar el CV: sustituye imagenes/CV-Hector-Martin.pdf manteniendo
-      el MISMO nombre (está enlazado en dos sitios: hero y contacto).
-    - El email de contacto también aparece dos veces (sección Contacto).
-    - El año del copyright del footer está escrito a mano.
-
-  CONVENCIONES
-    - Mobile first: clases sin prefijo = móvil; md: (48rem) y lg: (56rem).
-    - Clases de utilidad de Tailwind para casi todo. Los pocos componentes
-      propios (input.css) usan BEM: bloque__elemento--modificador (ej.
-      .btn--inverse, .timeline__item--role).
-    - Algunas clases no dan estilos: son ganchos de js/main.js (card,
-      case, section, steps, to-top…). No las borres.
-    - Los ids de las <section> se usan como anclas del menú (#casos…) y
-      el JS los usa para resaltar la sección activa. Si cambias un id,
-      cambia también el href del menú.
-    - Mejora progresiva: la página tiene que verse y funcionar sin JS.
-    - Accesibilidad: hay detalles intencionados (skip-link, aria-*, alt,
-      textos ocultos para lectores de pantalla). Si no sabes para qué
-      sirve un atributo aria, no lo borres: pregunta o busca primero.
-  =====================================================================
--->
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      =====================================================================
+      LANDING PERSONAL · Héctor Martín
+      NOTAS DE TRASPASO (léelas antes de tocar nada)
+      =====================================================================
+
+      QUÉ ES
+        Una web de una sola página, 100% estática: HTML + Tailwind CSS + JS
+        vanilla. No hay npm, ni framework JS, ni backend.
+        Los estilos son clases de Tailwind en este HTML. Tailwind se compila
+        en local con su CLI standalone (un ejecutable, sin npm):
+          ./tailwindcss -i estilos/input.css -o estilos/style.css --minify
+        Para verla en local: `python3 -m http.server` y abrir
+        http://localhost:8000. Se publica con GitHub Pages (rama main):
+        compila y sube estilos/style.css en el mismo commit que el HTML.
+
+      ESTRUCTURA DE CARPETAS
+        index.html            → este archivo: TODO el contenido (textos) y las
+                                clases de Tailwind (el diseño)
+        estilos/input.css     → entrada de Tailwind: tema (colores, fuentes),
+                                estilos base y componentes BEM
+        estilos/style.css     → CSS COMPILADO por Tailwind: no se edita a mano
+        js/main.js            → extras: tema oscuro, menú móvil, animaciones,
+                                botón "Volver arriba"
+        fuentes/              → tipografías Inter y Fraunces (alojadas en local,
+                                sin Google Fonts). Los .txt OFL son sus licencias:
+                                NO los borres, la licencia obliga a conservarlos.
+        imagenes/             → foto (WebP + copia JPG para redes sociales), CV en
+                                PDF, favicon.svg y el SVG de las ondas de fondo
+
+      CÓMO CAMBIAR COSAS HABITUALES
+        - Textos: se editan directamente aquí, en el HTML.
+        - Colores: variables en estilos/input.css (claro y oscuro) y clases
+          del tema (bg-bg, text-accent…). Nunca colores "a mano" (hex o
+          valores arbitrarios tipo bg-[#123456]).
+        - Actualizar el CV: sustituye imagenes/CV-Hector-Martin.pdf manteniendo
+          el MISMO nombre (está enlazado en dos sitios: hero y contacto).
+        - El email de contacto también aparece dos veces (sección Contacto).
+        - El año del copyright del footer está escrito a mano.
+
+      CONVENCIONES
+        - Mobile first: clases sin prefijo = móvil; md: (48rem) y lg: (56rem).
+        - Clases de utilidad de Tailwind para casi todo. Los pocos componentes
+          propios (input.css) usan BEM: bloque__elemento--modificador (ej.
+          .btn--inverse, .timeline__item--role).
+        - Algunas clases no dan estilos: son ganchos de js/main.js (card,
+          case, section, steps, to-top…). No las borres.
+        - Los ids de las <section> se usan como anclas del menú (#casos…) y
+          el JS los usa para resaltar la sección activa. Si cambias un id,
+          cambia también el href del menú.
+        - Mejora progresiva: la página tiene que verse y funcionar sin JS.
+        - Accesibilidad: hay detalles intencionados (skip-link, aria-*, alt,
+          textos ocultos para lectores de pantalla). Si no sabes para qué
+          sirve un atributo aria, no lo borres: pregunta o busca primero.
+      =====================================================================
+    -->
     <!-- Imprescindible para que en móvil no se vea la versión de escritorio en miniatura -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
